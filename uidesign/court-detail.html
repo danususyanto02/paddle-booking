@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Court Detail — Kinetic Court</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/globals.css" />
+</head>
+<body>
+  <div data-navbar></div>
+  <main class="max-w-[1200px] mx-auto px-4 md:px-12 py-8">
+    <a href="/courts.html" class="inline-flex items-center gap-1 text-sm font-medium text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">arrow_back</span> Back to Courts</a>
+    <div id="detail" class="mt-6"></div>
+  </main>
+  <div data-footer></div>
+  <script type="module">
+    import { renderNavbar, bindNavbar } from '/src/js/components/navbar.js'
+    import { renderFooter } from '/src/js/components/footer.js'
+    import { getCourt } from '/src/js/data/courts.js'
+    import { formatIDRShort } from '/src/js/lib/pricing.js'
+    import { courtDetailSkeleton } from '/src/js/components/skeleton.js'
+    import { mockDelay } from '/src/js/lib/delay.js'
+    document.querySelector('[data-navbar]').innerHTML=renderNavbar('courts')
+    document.querySelector('[data-footer]').innerHTML=renderFooter()
+    bindNavbar()
+    const id=new URLSearchParams(location.search).get('id')
+    const c=getCourt(id)
+    const root=document.getElementById('detail')
+    root.setAttribute('aria-live','polite')
+    if(!c){ root.innerHTML=`<div class="text-center py-16"><p class="text-on-surface-variant">Court not found.</p><a href="/courts.html" class="mt-4 inline-block text-sm font-semibold text-primary hover:underline">Browse courts</a></div>` }
+    else {
+      root.setAttribute('aria-busy','true')
+      root.innerHTML=courtDetailSkeleton()
+      await mockDelay(350)
+      document.title=`${c.name} — Kinetic Court`
+      root.removeAttribute('aria-busy')
+      root.innerHTML=`
+        <div class="grid lg:grid-cols-2 gap-8">
+          <img src="${c.image}" alt="${c.name}" class="w-full h-[420px] object-cover rounded-xl border border-surface-variant" loading="eager" fetchpriority="high" decoding="async" width="800" height="420" />
+          <div>
+            <span class="inline-flex items-center gap-1 bg-mint-glace text-on-primary-fixed-variant text-xs font-semibold px-3 py-1 rounded-full">${c.type} · ${c.surface}</span>
+            <h1 class="text-3xl font-bold mt-3">${c.name}</h1>
+            <p class="text-sm text-secondary mt-1 inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> ${c.location}</p>
+            <div class="mt-2 text-sm inline-flex items-center gap-2"><span class="inline-flex items-center gap-1 text-amber-600"><span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1">star</span> ${c.rating}</span><span class="text-secondary">(${c.reviews} reviews)</span></div>
+            <div class="mt-4 flex flex-wrap gap-2">${c.amenities.map(a=>`<span class="px-3 py-1 rounded-full bg-surface-container border border-outline-variant/30 text-xs">${a}</span>`).join('')}</div>
+            <div class="mt-6 p-4 rounded-xl bg-surface-container-lowest border border-surface-variant flex items-center justify-between">
+              <div><div class="text-xs text-secondary">Price per hour</div><div class="text-xl font-bold text-primary">${formatIDRShort(c.pricePerHour)}</div></div>
+              <a href="/booking.html?courtId=${c.id}" class="px-6 py-3 rounded-full bg-primary text-on-primary text-sm font-semibold hover:opacity-90 inline-flex items-center gap-2">Book This Court <span class="material-symbols-outlined text-[18px]">arrow_forward</span></a>
+            </div>
+            <div class="mt-6 text-sm text-on-surface-variant leading-relaxed">
+              Premium padel experience with professional-grade turf, panoramic glass, and tournament lighting. Ideal for casual play and competitive matches. Free cancellation up to 24 hours before your slot.
+            </div>
+          </div>
+        </div>`
+    }
+  </script>
+</body>
+</html>

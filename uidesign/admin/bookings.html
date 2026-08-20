@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bookings — Kinetic Court Admin</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/globals.css" />
+</head>
+<body class="bg-background">
+  <div data-admin-sidebar></div>
+  <div data-admin-topbar></div>
+  <main class="md:ml-64 pt-16 min-h-screen">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-8 py-8">
+      <h1 class="text-3xl font-bold">Bookings</h1>
+      <p class="text-sm text-on-surface-variant mt-1">All bookings across all courts.</p>
+
+      <div class="flex flex-wrap gap-2 mt-6" id="statusFilters">
+        <button data-status="all" class="status-btn px-4 py-1.5 rounded-full bg-inverse-surface text-inverse-on-surface text-sm font-semibold">All</button>
+        <button data-status="Confirmed" class="status-btn px-4 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-sm font-semibold">Confirmed</button>
+        <button data-status="Completed" class="status-btn px-4 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-sm font-semibold">Completed</button>
+        <button data-status="Cancelled" class="status-btn px-4 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-sm font-semibold">Cancelled</button>
+      </div>
+
+      <div class="mt-6 bg-surface-container-lowest rounded-xl border border-surface-variant overflow-hidden">
+        <div class="hidden md:grid grid-cols-12 gap-4 p-3 bg-surface-container-low/50 border-b border-surface-variant text-xs font-semibold text-on-surface-variant uppercase tracking-widest">
+          <div class="col-span-3">Booking</div><div class="col-span-3">Court</div><div class="col-span-3">Date & Time</div><div class="col-span-1 text-right">Total</div><div class="col-span-2 text-center">Status</div>
+        </div>
+        <div id="rows" aria-live="polite"></div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import { renderAdminSidebar, renderAdminTopbar, bindAdminLayout } from '/src/js/components/adminLayout.js'
+    import { requireAdmin } from '/src/js/stores/authStore.js'
+    import { getBookings } from '/src/js/stores/bookingStore.js'
+    import { getCourt } from '/src/js/data/courts.js'
+    import { formatIDRShort } from '/src/js/lib/pricing.js'
+    import { historySkeleton } from '/src/js/components/skeleton.js'
+    import { mockDelay } from '/src/js/lib/delay.js'
+    if(!requireAdmin()){}
+    document.querySelector('[data-admin-sidebar]').innerHTML=renderAdminSidebar('bookings')
+    document.querySelector('[data-admin-topbar]').innerHTML=renderAdminTopbar()
+    bindAdminLayout()
+
+    let status='all'
+    let renderToken=0
+    async function render(){
+      const token=++renderToken
+      const rowsEl=document.getElementById('rows')
+      rowsEl.setAttribute('aria-busy','true')
+      rowsEl.innerHTML=historySkeleton(4)
+      await mockDelay(280)
+      if(token!==renderToken) return
+      rowsEl.removeAttribute('aria-busy')
+      const list=getBookings().filter(b=> status==='all' || b.status===status)
+      rowsEl.innerHTML=list.map(b=>{
+        const c=getCourt(b.courtId)
+        const badge = b.status==='Cancelled' ? 'bg-error-container text-on-error-container' : b.status==='Completed' ? 'bg-surface-variant text-on-surface-variant' : 'bg-mint-glace text-on-primary-fixed-variant'
+        return `
+        <div class="grid md:grid-cols-12 gap-2 p-4 border-b border-surface-variant/20 items-center text-sm hover:bg-surface">
+          <div class="md:col-span-3 font-mono text-xs">${b.id}</div>
+          <div class="md:col-span-3">${c?.name||b.courtId} <span class="text-xs text-secondary">· ${c?.location||''}</span></div>
+          <div class="md:col-span-3">${b.date} · ${b.start}–${b.end} · ${b.duration}m</div>
+          <div class="md:col-span-1 text-right font-semibold">${formatIDRShort(b.total)}</div>
+          <div class="md:col-span-2 text-center"><span class="px-3 py-1 rounded-full text-xs font-semibold ${badge}">${b.status}</span></div>
+        </div>`
+      }).join('') || `<div class="p-8 text-center text-sm text-secondary">No bookings for this filter.</div>`
+    }
+    document.querySelectorAll('.status-btn').forEach(b=> b.addEventListener('click', ()=>{
+      status=b.dataset.status
+      document.querySelectorAll('.status-btn').forEach(x=>{
+        x.className = x.dataset.status===status ? 'status-btn px-4 py-1.5 rounded-full bg-inverse-surface text-inverse-on-surface text-sm font-semibold' : 'status-btn px-4 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-sm font-semibold'
+      })
+      render()
+    }))
+    render()
+  </script>
+</body>
+</html>

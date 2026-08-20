@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — Kinetic Court</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/globals.css" />
+</head>
+<body>
+  <div data-navbar></div>
+  <main class="max-w-[1000px] mx-auto px-4 md:px-12 py-8">
+    <h1 class="text-2xl font-bold">Checkout</h1>
+    <p class="text-sm text-on-surface-variant mt-1">Review your booking and choose a payment method (mock).</p>
+
+    <div class="grid lg:grid-cols-12 gap-8 mt-8">
+      <div class="lg:col-span-7 space-y-6">
+        <div id="summaryCard" class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 card-shadow"></div>
+
+        <div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6">
+          <h2 class="font-semibold">Payment Method</h2>
+          <p class="text-xs text-secondary mt-1">Mock payment — no real transaction will be processed.</p>
+          <div class="mt-4 space-y-3" id="payMethods">
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer has-[input:checked]:border-primary has-[input:checked]:bg-mint-glace">
+              <input type="radio" name="pay" value="Bank Transfer" checked /> Bank Transfer (Virtual Account)
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer has-[input:checked]:border-primary has-[input:checked]:bg-mint-glace">
+              <input type="radio" name="pay" value="QRIS" /> QRIS
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer has-[input:checked]:border-primary has-[input:checked]:bg-mint-glace">
+              <input type="radio" name="pay" value="Cash at Venue" /> Cash at Venue
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5">
+        <div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 card-shadow sticky top-24">
+          <h3 class="font-semibold">Price Breakdown</h3>
+          <div class="mt-4 space-y-2 text-sm">
+            <div class="flex justify-between text-on-surface-variant"><span>Court Fee</span><span id="cCourt">—</span></div>
+            <div class="flex justify-between text-on-surface-variant"><span>Processing Fee</span><span id="cProc">—</span></div>
+            <div class="h-px bg-outline-variant/30 my-2"></div>
+            <div class="flex justify-between font-semibold"><span>Total</span><span id="cTotal" class="text-primary">—</span></div>
+          </div>
+          <button id="btnPay" class="mt-6 w-full py-3 rounded-lg bg-primary text-on-primary text-sm font-semibold hover:opacity-90">Pay Now</button>
+          <p class="text-xs text-center text-secondary mt-2">By paying, you agree to our Terms and cancellation policy.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div data-footer></div>
+
+  <script type="module">
+    import { renderNavbar, bindNavbar } from '/src/js/components/navbar.js'
+    import { renderFooter } from '/src/js/components/footer.js'
+    import { getSelection, addBooking, newBookingId } from '/src/js/stores/bookingStore.js'
+    import { getCourt } from '/src/js/data/courts.js'
+    import { calcTotal, formatIDRShort } from '/src/js/lib/pricing.js'
+    import { endTime } from '/src/js/lib/slots.js'
+    import { toast } from '/src/js/components/toast.js'
+
+    document.querySelector('[data-navbar]').innerHTML=renderNavbar('')
+    document.querySelector('[data-footer]').innerHTML=renderFooter()
+    bindNavbar()
+
+    const sel=getSelection()
+    const court=getCourt(sel.courtId)
+    if(!court || !sel.date || !sel.slot){ location.href='/courts.html' }
+
+    const { courtFee, processingFee, total } = calcTotal(court.pricePerHour, sel.duration)
+    document.getElementById('cCourt').textContent=formatIDRShort(courtFee)
+    document.getElementById('cProc').textContent=formatIDRShort(processingFee)
+    document.getElementById('cTotal').textContent=formatIDRShort(total)
+
+    document.getElementById('summaryCard').innerHTML=`
+      <div class="flex gap-4">
+        <img src="${court.image}" alt="${court.name}" width="96" height="96" class="w-24 h-24 rounded-lg object-cover border border-surface-variant" loading="eager" decoding="async" onerror="this.style.display='none'" />
+        <div>
+          <div class="text-xs px-2 py-1 rounded-full bg-mint-glace text-on-primary-fixed-variant inline-block">${court.type} · ${court.surface}</div>
+          <h3 class="font-semibold mt-1">${court.name}</h3>
+          <p class="text-xs text-secondary">${court.location}</p>
+          <p class="text-sm font-medium mt-2">${new Date(sel.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric', year:'numeric'})} · ${sel.slot} – ${endTime(sel.slot, sel.duration)} · ${sel.duration} min</p>
+        </div>
+      </div>`
+
+    document.getElementById('btnPay').addEventListener('click', ()=>{
+      const method=document.querySelector('input[name="pay"]:checked')?.value || 'Mock'
+      const booking={ id:newBookingId(), courtId: court.id, date: sel.date, start: sel.slot, end: endTime(sel.slot, sel.duration), duration: sel.duration, total, status:'Confirmed', paymentMethod: method, createdAt: new Date().toISOString() }
+      addBooking(booking)
+      toast('Payment successful (mock)!', 'success')
+      setTimeout(()=> location.href=`/success.html?code=${encodeURIComponent(booking.id)}`, 500)
+    })
+  </script>
+</body>
+</html>

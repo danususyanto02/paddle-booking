@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Find and book premium padel courts near you." />
+  <title>Find a Court — Kinetic Court</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/globals.css" />
+</head>
+<body>
+  <div data-navbar></div>
+  <main class="max-w-[1200px] mx-auto px-4 md:px-12 py-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div>
+        <h1 class="font-display-lg-mobile md:font-display-lg text-primary">Find a Court</h1>
+        <p class="text-sm text-secondary mt-1">Discover and book premium padel courts near you.</p>
+      </div>
+      <div class="flex items-center gap-2 bg-surface-container-lowest border border-surface-variant rounded-xl p-2 shadow-sm">
+        <label class="flex items-center gap-2 px-3 py-1.5">
+          <span class="material-symbols-outlined text-secondary text-[18px]">calendar_today</span>
+          <input id="filterDate" type="date" class="bg-transparent outline-none text-sm font-medium" />
+        </label>
+        <span class="w-px h-6 bg-outline-variant/50"></span>
+        <label class="flex items-center gap-2 px-3 py-1.5">
+          <span class="material-symbols-outlined text-secondary text-[18px]">schedule</span>
+          <select id="filterTime" class="bg-transparent outline-none text-sm font-medium">
+            <option value="">Any time</option><option>Morning</option><option>Afternoon</option><option>Evening</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-6">
+      <!-- Filters -->
+      <aside class="w-full lg:w-[300px] shrink-0">
+        <div class="bg-surface-container-lowest rounded-xl p-6 border border-surface-variant card-shadow sticky top-24">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="font-semibold">Filters</h2>
+            <button id="btnReset" class="text-xs font-semibold text-primary hover:underline">Reset</button>
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-sm font-semibold mb-3 inline-flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[18px]">payments</span> Price Range (per hour)</h3>
+            <input id="priceRange" type="range" min="80000" max="250000" step="10000" value="250000" class="w-full accent-primary" />
+            <div class="flex justify-between text-xs text-secondary mt-1"><span>Rp80.000</span><span id="priceLabel">Up to Rp250.000</span></div>
+          </div>
+          <div class="h-px bg-outline-variant/30 my-6"></div>
+
+          <div class="mb-6">
+            <h3 class="text-sm font-semibold mb-3 inline-flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[18px]">layers</span> Surface Type</h3>
+            <div class="space-y-2" id="surfaceFilters">
+              <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" value="Indoor" class="rounded" /> Indoor Premium</label>
+              <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" value="Outdoor" class="rounded" /> Outdoor Panoramic</label>
+              <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" value="Covered" class="rounded" /> Covered Semi-Indoor</label>
+              <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" value="Rooftop" class="rounded" /> Rooftop</label>
+            </div>
+          </div>
+          <div class="h-px bg-outline-variant/30 my-6"></div>
+
+          <div>
+            <h3 class="text-sm font-semibold mb-3 inline-flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[18px]">star</span> Amenities</h3>
+            <div class="flex flex-wrap gap-2" id="amenityFilters">
+              <button data-amenity="Cafe" class="amenity-btn px-3 py-1.5 rounded-full border text-xs font-medium border-outline-variant hover:border-primary">Cafe</button>
+              <button data-amenity="Showers" class="amenity-btn px-3 py-1.5 rounded-full border text-xs font-medium border-outline-variant hover:border-primary">Showers</button>
+              <button data-amenity="Parking" class="amenity-btn px-3 py-1.5 rounded-full border text-xs font-medium border-outline-variant hover:border-primary">Parking</button>
+              <button data-amenity="Pro Shop" class="amenity-btn px-3 py-1.5 rounded-full border text-xs font-medium border-outline-variant hover:border-primary">Pro Shop</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Grid -->
+      <div class="flex-1">
+        <div class="flex justify-between items-center mb-4">
+          <p class="text-sm text-secondary">Showing <span id="count" class="font-semibold text-on-surface">0</span> courts</p>
+          <label class="flex items-center gap-2 text-xs text-secondary">Sort by
+            <select id="sortBy" class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-1.5 text-sm font-medium">
+              <option value="recommended">Recommended</option><option value="price-asc">Price: Low to High</option><option value="price-desc">Price: High to Low</option><option value="rating">Rating</option>
+            </select>
+          </label>
+        </div>
+        <div id="grid" class="grid md:grid-cols-2 gap-6" aria-live="polite"></div>
+        <div id="pagination" class="mt-8 flex justify-center gap-2"></div>
+        <div id="empty" class="hidden text-center py-16">
+          <p class="text-on-surface-variant">No courts match your filters.</p>
+          <button id="btnClearFilters" class="mt-3 text-sm font-semibold text-primary hover:underline">Clear filters</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div data-footer></div>
+
+  <script type="module">
+    import { renderNavbar, bindNavbar } from '/src/js/components/navbar.js'
+    import { renderFooter } from '/src/js/components/footer.js'
+    import { courts } from '/src/js/data/courts.js'
+    import { courtCard } from '/src/js/components/courtCard.js'
+    import { formatIDRShort } from '/src/js/lib/pricing.js'
+    import { courtCardSkeleton } from '/src/js/components/skeleton.js'
+    import { initLazyImages } from '/src/js/lib/lazyLoad.js'
+    import { mockDelay } from '/src/js/lib/delay.js'
+
+    document.querySelector('[data-navbar]').innerHTML = renderNavbar('courts')
+    document.querySelector('[data-footer]').innerHTML = renderFooter()
+    bindNavbar()
+
+    const qs=new URLSearchParams(location.search)
+    const initialLocation=(qs.get('location')||'').toLowerCase()
+    if(qs.get('date')) document.getElementById('filterDate').value=qs.get('date')
+
+    let priceMax=250000
+    let surfaces=new Set()
+    let amenities=new Set()
+    let sort='recommended'
+    let page=1
+    const perPage=4
+
+    const els={
+      price: document.getElementById('priceRange'),
+      priceLabel: document.getElementById('priceLabel'),
+      sort: document.getElementById('sortBy'),
+      grid: document.getElementById('grid'),
+      count: document.getElementById('count'),
+      pagination: document.getElementById('pagination'),
+      empty: document.getElementById('empty'),
+    }
+
+    function filtered(){
+      let list=courts.filter(c=>{
+        if(c.pricePerHour>priceMax) return false
+        if(surfaces.size && !surfaces.has(c.type)) return false
+        if(amenities.size){ for(const a of amenities) if(!c.amenities.includes(a)) return false }
+        if(initialLocation && !c.location.toLowerCase().includes(initialLocation) && !c.name.toLowerCase().includes(initialLocation)) return false
+        return true
+      })
+      if(sort==='price-asc') list=[...list].sort((a,b)=>a.pricePerHour-b.pricePerHour)
+      if(sort==='price-desc') list=[...list].sort((a,b)=>b.pricePerHour-a.pricePerHour)
+      if(sort==='rating') list=[...list].sort((a,b)=>b.rating-a.rating)
+      return list
+    }
+
+    let renderToken=0
+    async function render(){
+      const token=++renderToken
+      els.grid.setAttribute('aria-busy','true')
+      els.grid.innerHTML = courtCardSkeleton(perPage)
+      els.empty.classList.add('hidden')
+      els.grid.classList.remove('hidden')
+      els.count.textContent='—'
+      els.pagination.innerHTML=''
+      await mockDelay(300)
+      if(token!==renderToken) return
+      const list=filtered()
+      els.count.textContent=list.length
+      const totalPages=Math.max(1, Math.ceil(list.length/perPage))
+      if(page>totalPages) page=totalPages
+      const slice=list.slice((page-1)*perPage, page*perPage)
+      if(list.length===0){
+        els.grid.innerHTML=''
+        els.grid.classList.add('hidden')
+        els.empty.classList.remove('hidden')
+        els.pagination.innerHTML=''
+      } else {
+        els.grid.innerHTML = slice.map(courtCard).join('')
+        els.empty.classList.add('hidden')
+        els.grid.classList.remove('hidden')
+        initLazyImages(els.grid)
+      }
+      els.grid.removeAttribute('aria-busy')
+
+      // pagination
+      let html=''
+      const btn=(p,label,active,disabled)=> `<button data-page="${p}" ${disabled?'disabled':''} class="w-9 h-9 rounded-lg border text-sm font-semibold ${active?'bg-primary text-on-primary border-primary':'border-outline-variant hover:bg-surface-container'} ${disabled?'opacity-40 cursor-not-allowed':''}">${label}</button>`
+      html+=btn(page-1,'‹',false,page===1)
+      for(let i=1;i<=totalPages;i++) html+=btn(i,i,i===page,false)
+      html+=btn(page+1,'›',false,page===totalPages)
+      els.pagination.innerHTML=html
+      els.pagination.querySelectorAll('[data-page]').forEach(b=> b.addEventListener('click', ()=>{ const p=Number(b.dataset.page); if(p>=1&&p<=totalPages){ page=p; render(); window.scrollTo({top:0, behavior:'smooth'}) } }))
+    }
+
+    els.price.addEventListener('input', (e)=>{ priceMax=Number(e.target.value); els.priceLabel.textContent='Up to '+formatIDRShort(priceMax); page=1; render() })
+    els.sort.addEventListener('change', (e)=>{ sort=e.target.value; render() })
+    document.querySelectorAll('#surfaceFilters input').forEach(cb=> cb.addEventListener('change', ()=>{ surfaces=new Set([...document.querySelectorAll('#surfaceFilters input:checked')].map(x=>x.value)); page=1; render()}))
+    document.querySelectorAll('.amenity-btn').forEach(b=> b.addEventListener('click', ()=>{
+      const a=b.dataset.amenity
+      if(amenities.has(a)){ amenities.delete(a); b.classList.remove('bg-primary-container','border-primary','text-on-primary-container') }
+      else { amenities.add(a); b.classList.add('bg-primary-container','border-primary','text-on-primary-container') }
+      page=1; render()
+    }))
+    document.getElementById('btnReset').addEventListener('click', ()=>{
+      priceMax=250000; els.price.value=250000; els.priceLabel.textContent='Up to Rp250.000'
+      surfaces.clear(); document.querySelectorAll('#surfaceFilters input').forEach(cb=> cb.checked=false)
+      amenities.clear(); document.querySelectorAll('.amenity-btn').forEach(b=> b.classList.remove('bg-primary-container','border-primary','text-on-primary-container'))
+      els.sort.value='recommended'; sort='recommended'; page=1; render()
+    })
+    document.getElementById('btnClearFilters')?.addEventListener('click', ()=> document.getElementById('btnReset').click())
+
+    render()
+  </script>
+</body>
+</html>

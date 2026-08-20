@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Kinetic Court</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/globals.css" />
+</head>
+<body>
+  <div data-navbar></div>
+  <main class="max-w-[480px] mx-auto px-4 py-12">
+    <h1 class="text-2xl font-bold">Welcome back</h1>
+    <p class="text-sm text-on-surface-variant mt-1">Sign in to manage your bookings.</p>
+
+    <form id="loginForm" class="mt-8 bg-surface-container-lowest border border-surface-variant rounded-xl p-6 space-y-4 card-shadow">
+      <label class="block">
+        <span class="text-sm font-medium">Name</span>
+        <input name="name" required placeholder="Alex Mercer" class="mt-1 w-full border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium">Email</span>
+        <input name="email" type="email" required placeholder="alex@example.com" class="mt-1 w-full border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium">Role</span>
+        <select name="role" class="mt-1 w-full border border-outline-variant rounded-lg px-3 py-2.5 text-sm bg-white">
+          <option value="user">User</option><option value="admin">Admin</option>
+        </select>
+      </label>
+      <p class="text-xs text-secondary">Mock auth — no password needed. Choose Admin to access the admin console.</p>
+      <button type="submit" class="w-full py-3 rounded-lg bg-primary text-on-primary text-sm font-semibold hover:opacity-90">Sign In</button>
+      <p class="text-xs text-center text-secondary">Don't have an account? <a href="/register.html" class="font-semibold text-primary hover:underline">Create one</a></p>
+    </form>
+  </main>
+  <div data-footer></div>
+  <script type="module">
+    import { renderNavbar, bindNavbar } from '/src/js/components/navbar.js'
+    import { renderFooter } from '/src/js/components/footer.js'
+    import { login } from '/src/js/stores/authStore.js'
+    document.querySelector('[data-navbar]').innerHTML=renderNavbar('')
+    document.querySelector('[data-footer]').innerHTML=renderFooter()
+    bindNavbar()
+    document.getElementById('loginForm').addEventListener('submit', (e)=>{
+      e.preventDefault()
+      const fd=new FormData(e.target)
+      login({ name: fd.get('name'), email: fd.get('email'), role: fd.get('role') })
+      const next=new URLSearchParams(location.search).get('next')
+      if(next) location.href=next
+      else if(fd.get('role')==='admin') location.href='/admin/index.html'
+      else location.href='/dashboard.html'
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — Kinetic Court</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/globals.css" />
+</head>
+<body class="bg-background">
+  <div data-admin-sidebar></div>
+  <div data-admin-topbar></div>
+  <main class="md:ml-64 pt-16 min-h-screen">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-8 py-8">
+      <h1 class="text-3xl font-bold">Admin Dashboard</h1>
+      <p class="text-sm text-on-surface-variant mt-1">Overview of Kinetic Court performance today.</p>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8" id="stats"></div>
+
+      <div class="grid lg:grid-cols-3 gap-6 mt-8">
+        <section class="lg:col-span-2 bg-surface-container-lowest rounded-xl border border-surface-variant overflow-hidden">
+          <div class="p-4 border-b border-surface-variant/50 flex justify-between items-center bg-surface-cream/30">
+            <h3 class="font-semibold">Recent Activities</h3>
+            <a href="/admin/bookings.html" class="text-xs font-semibold text-primary hover:underline">View All</a>
+          </div>
+          <div id="activities"></div>
+        </section>
+        <section class="bg-surface-container-lowest rounded-xl border border-surface-variant p-6">
+          <h3 class="font-semibold">Weekly Bookings</h3>
+          <div id="weekly" class="mt-4 h-48 flex items-end gap-2"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import { renderAdminSidebar, renderAdminTopbar, bindAdminLayout } from '/src/js/components/adminLayout.js'
+    import { requireAdmin } from '/src/js/stores/authStore.js'
+    import { getBookings } from '/src/js/stores/bookingStore.js'
+    import { members } from '/src/js/data/members.js'
+    import { getCourt } from '/src/js/data/courts.js'
+    import { formatIDRShort } from '/src/js/lib/pricing.js'
+    import { adminStatSkeleton, tableRowSkeleton } from '/src/js/components/skeleton.js'
+    import { mockDelay } from '/src/js/lib/delay.js'
+    if(!requireAdmin()){}
+    document.querySelector('[data-admin-sidebar]').innerHTML=renderAdminSidebar('dashboard')
+    document.querySelector('[data-admin-topbar]').innerHTML=renderAdminTopbar()
+    bindAdminLayout()
+
+    const statsEl=document.getElementById('stats')
+    const actsEl=document.getElementById('activities')
+    const weeklyEl=document.getElementById('weekly')
+    statsEl.setAttribute('aria-busy','true'); actsEl.setAttribute('aria-busy','true'); weeklyEl.setAttribute('aria-busy','true')
+    statsEl.innerHTML=adminStatSkeleton(4)
+    actsEl.innerHTML=tableRowSkeleton(4)
+    weeklyEl.innerHTML='<div class="w-full h-48 flex items-end gap-2">'+Array.from({length:7}).map(()=>'<div class="flex-1 skeleton rounded-t-md" style="height:40%"></div>').join('')+'</div>'
+    await mockDelay(350)
+    statsEl.removeAttribute('aria-busy'); actsEl.removeAttribute('aria-busy'); weeklyEl.removeAttribute('aria-busy')
+
+    const bookings=getBookings()
+    const revenue=bookings.reduce((s,b)=> s + (b.status==='Cancelled'?0:b.total), 0)
+    const activeMembers=members.filter(m=> m.status==='Active').length
+    const todayStr=new Date().toISOString().slice(0,10)
+    const todayBookings=bookings.filter(b=> b.date===todayStr).length
+    const pending=bookings.filter(b=> b.status==='Confirmed').length
+
+    statsEl.innerHTML=`
+      <div class="bg-surface-container-lowest rounded-xl border border-surface-variant p-6 relative overflow-hidden"><div class="absolute -right-6 -top-6 w-24 h-24 bg-mint-glace rounded-full opacity-50"></div><div class="relative"><div class="w-10 h-10 rounded-lg bg-mint-glace grid place-items-center text-primary"><span class="material-symbols-outlined">payments</span></div><div class="text-xs text-on-surface-variant mt-3 uppercase tracking-widest">Total Revenue</div><div class="text-2xl font-bold">${formatIDRShort(revenue)}</div></div></div>
+      <div class="bg-surface-container-lowest rounded-xl border border-surface-variant p-6 relative overflow-hidden"><div class="absolute -right-6 -top-6 w-24 h-24 bg-sky-tint rounded-full opacity-50"></div><div class="relative"><div class="w-10 h-10 rounded-lg bg-sky-tint grid place-items-center text-tertiary"><span class="material-symbols-outlined">group</span></div><div class="text-xs text-on-surface-variant mt-3 uppercase tracking-widest">Active Members</div><div class="text-2xl font-bold">${activeMembers}</div></div></div>
+      <div class="bg-surface-container-lowest rounded-xl border border-surface-variant p-6 relative overflow-hidden"><div class="absolute -right-6 -top-6 w-24 h-24 bg-surface-cream rounded-full opacity-60"></div><div class="relative"><div class="w-10 h-10 rounded-lg bg-surface-container grid place-items-center"><span class="material-symbols-outlined">calendar_today</span></div><div class="text-xs text-on-surface-variant mt-3 uppercase tracking-widest">Today's Bookings</div><div class="text-2xl font-bold">${todayBookings} <span class="text-xs font-normal text-on-surface-variant">(${pending} pending)</span></div></div></div>
+      <div class="bg-surface-container-lowest rounded-xl border border-surface-variant p-6 relative overflow-hidden"><div class="absolute -right-6 -top-6 w-24 h-24 bg-lavender-mist rounded-full opacity-50"></div><div class="relative"><div class="w-10 h-10 rounded-lg bg-lavender-mist grid place-items-center text-secondary"><span class="material-symbols-outlined">donut_large</span></div><div class="text-xs text-on-surface-variant mt-3 uppercase tracking-widest">Court Occupancy</div><div class="text-2xl font-bold">84% <span class="text-xs font-normal text-secondary">Peak Hours</span></div></div></div>
+    `
+
+    const acts=bookings.slice(0,4)
+    actsEl.innerHTML=acts.map(b=>{
+      const c=getCourt(b.courtId)
+      return `<div class="flex items-center p-4 border-b border-surface-variant/20 hover:bg-surface-cream">
+        <div class="w-9 h-9 rounded-full bg-mint-glace grid place-items-center text-primary"><span class="material-symbols-outlined text-[18px]">sports_tennis</span></div>
+        <div class="ml-3 flex-1"><div class="text-sm"><span class="font-semibold">${c?.name||b.courtId}</span> — ${b.status} · ${b.start}–${b.end}</div><div class="text-xs text-on-surface-variant">${b.date}</div></div>
+        <span class="text-xs text-on-surface-variant">${b.id}</span>
+      </div>`
+    }).join('') || `<div class="p-8 text-center text-sm text-secondary">No activities yet.</div>`
+
+    // Weekly bookings: count per weekday starting Monday
+    const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    const counts=Array(7).fill(0)
+    bookings.forEach(b=>{
+      const d=new Date(b.date+'T12:00:00'); let wd=d.getDay(); wd= wd===0?6:wd-1; counts[wd]++
+    })
+    const max=Math.max(1, ...counts)
+    weeklyEl.innerHTML=counts.map((c,i)=>{
+      const h=Math.round((c/max)*100)
+      const isPeak=c===max
+      return `<div class="flex-1 flex flex-col items-center gap-2"><div class="w-full rounded-t-md ${isPeak?'bg-primary':'bg-mint-glace'}" style="height:${Math.max(8,h)}%"></div><span class="text-xs ${isPeak?'font-semibold text-primary':'text-on-surface-variant'}">${days[i]}</span></div>`
+    }).join('')
+  </script>
+</body>
+</html>

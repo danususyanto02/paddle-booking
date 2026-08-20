@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schedule Session — Kinetic Court</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/globals.css" />
+</head>
+<body>
+  <div data-navbar></div>
+  <main class="max-w-[1200px] mx-auto px-4 md:px-12 py-8">
+    <div class="flex items-center justify-between">
+      <a href="/courts.html" class="inline-flex items-center gap-1 text-sm font-medium text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">arrow_back</span> Back to Courts</a>
+      <div class="text-sm font-semibold text-primary">Kinetic Court</div>
+    </div>
+
+    <div class="grid lg:grid-cols-12 gap-8 mt-8">
+      <!-- Left: steps -->
+      <div class="lg:col-span-8 space-y-10">
+        <div>
+          <h1 class="font-display-lg-mobile md:font-display-lg">Schedule Session</h1>
+          <p id="subtitle" class="text-sm text-on-surface-variant mt-1"></p>
+        </div>
+
+        <section>
+          <div class="flex items-center gap-3 mb-4"><span class="w-7 h-7 rounded-full bg-primary-fixed grid place-items-center text-xs font-bold">1</span><h2 class="font-semibold">Select Date</h2></div>
+          <div id="calendarMount"></div>
+        </section>
+
+        <section>
+          <div class="flex items-center gap-3 mb-4"><span class="w-7 h-7 rounded-full bg-primary-fixed grid place-items-center text-xs font-bold">2</span><h2 class="font-semibold">Duration</h2></div>
+          <div class="grid grid-cols-3 gap-3" id="durationGroup">
+            <button data-duration="60" class="duration-btn py-6 rounded-xl border border-outline-variant bg-surface-container-lowest text-center hover:border-primary-fixed"><div class="text-xl font-semibold">60</div><div class="text-xs text-secondary">MINUTES</div></button>
+            <button data-duration="90" class="duration-btn py-6 rounded-xl border-2 border-primary-fixed bg-surface shadow text-center"><div class="text-xl font-semibold">90</div><div class="text-xs text-secondary">MINUTES</div></button>
+            <button data-duration="120" class="duration-btn py-6 rounded-xl border border-outline-variant bg-surface-container-lowest text-center hover:border-primary-fixed"><div class="text-xl font-semibold">120</div><div class="text-xs text-secondary">MINUTES</div></button>
+          </div>
+        </section>
+
+        <section>
+          <div class="flex items-center gap-3 mb-4"><span class="w-7 h-7 rounded-full bg-primary-fixed grid place-items-center text-xs font-bold">3</span><h2 class="font-semibold">Time Slot</h2></div>
+          <div id="slotsMount" aria-live="polite"></div>
+        </section>
+      </div>
+
+      <!-- Right: summary sticky -->
+      <div class="lg:col-span-4">
+        <div class="sticky top-24 bg-surface-container-lowest rounded-xl border border-surface-variant overflow-hidden card-shadow">
+          <div class="h-32 relative">
+            <img id="summaryImg" class="w-full h-full object-cover" alt="" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div class="absolute bottom-3 left-3 text-white">
+              <span id="summaryBadge" class="text-xs px-2 py-1 rounded-full bg-white/20 backdrop-blur border border-white/20"></span>
+              <div id="summaryName" class="font-semibold"></div>
+            </div>
+          </div>
+          <div class="p-6 space-y-4">
+            <div class="flex items-start gap-3 text-sm"><span class="material-symbols-outlined text-secondary">calendar_month</span><div><div id="summaryDate" class="font-semibold"></div><div id="summaryYear" class="text-xs text-secondary"></div></div></div>
+            <div class="flex items-start gap-3 text-sm"><span class="material-symbols-outlined text-secondary">schedule</span><div><div id="summaryTime" class="font-semibold">Select a time slot</div><div id="summaryDur" class="text-xs text-secondary"></div></div></div>
+            <div class="h-px bg-outline-variant/40"></div>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between text-on-surface-variant"><span>Court Fee</span><span id="feeCourt">—</span></div>
+              <div class="flex justify-between text-on-surface-variant"><span>Processing Fee</span><span id="feeProc">—</span></div>
+            </div>
+            <div class="bg-surface-container p-3 rounded-lg flex justify-between items-center"><span class="font-semibold">Total</span><span id="feeTotal" class="font-semibold text-primary">—</span></div>
+            <button id="btnConfirm" class="w-full py-3 rounded-lg bg-primary-fixed text-on-primary-fixed text-sm font-semibold inline-flex justify-center items-center gap-2 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed" disabled>Confirm Booking <span class="material-symbols-outlined text-[18px]">arrow_forward</span></button>
+            <p class="text-xs text-center text-secondary">Free cancellation up to 24 hours in advance.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div data-footer></div>
+
+  <script type="module">
+    import { renderNavbar, bindNavbar } from '/src/js/components/navbar.js'
+    import { renderFooter } from '/src/js/components/footer.js'
+    import { getCourt } from '/src/js/data/courts.js'
+    import { getSelection, setSelection } from '/src/js/stores/bookingStore.js'
+    import { renderCalendar, bindCalendar } from '/src/js/components/calendar.js'
+    import { renderTimeSlots } from '/src/js/components/timeSlots.js'
+    import { calcTotal, formatIDRShort } from '/src/js/lib/pricing.js'
+    import { endTime, canFit } from '/src/js/lib/slots.js'
+    import { toast } from '/src/js/components/toast.js'
+    import { slotSkeleton } from '/src/js/components/skeleton.js'
+    import { initLazyImages } from '/src/js/lib/lazyLoad.js'
+    import { mockDelay } from '/src/js/lib/delay.js'
+
+    document.querySelector('[data-navbar]').innerHTML=renderNavbar('courts')
+    document.querySelector('[data-footer]').innerHTML=renderFooter()
+    bindNavbar()
+
+    const urlCourtId=new URLSearchParams(location.search).get('courtId')
+    const sel=getSelection()
+    const courtId=urlCourtId || sel.courtId || 'alpha'
+    const court=getCourt(courtId) || getCourt('alpha')
+    document.getElementById('subtitle').textContent=`Select your preferred date, duration, and time slot for ${court.name}.`
+    const summaryImgEl=document.getElementById('summaryImg')
+    summaryImgEl.dataset.src=court.image
+    summaryImgEl.alt=court.name
+    summaryImgEl.setAttribute('loading','lazy')
+    summaryImgEl.setAttribute('decoding','async')
+    summaryImgEl.classList.add('img-fade')
+    initLazyImages(document)
+    document.getElementById('summaryBadge').textContent=court.type
+    document.getElementById('summaryName').textContent=court.name
+
+    // state
+    const today=new Date()
+    let calYear=today.getFullYear(), calMonth=today.getMonth()
+    let selectedISO = sel.date || new Date().toISOString().slice(0,10)
+    let duration = sel.duration || 90
+    let slot = sel.slot || null
+
+    // duration UI
+    function syncDurationUI(){
+      document.querySelectorAll('.duration-btn').forEach(b=>{
+        const d=Number(b.dataset.duration)
+        const active=d===duration
+        b.className = active
+          ? 'duration-btn py-6 rounded-xl border-2 border-primary-fixed bg-surface shadow text-center'
+          : 'duration-btn py-6 rounded-xl border border-outline-variant bg-surface-container-lowest text-center hover:border-primary-fixed'
+        b.setAttribute('aria-pressed', active?'true':'false')
+      })
+    }
+    document.getElementById('durationGroup').addEventListener('click', (e)=>{
+      const btn=e.target.closest('[data-duration]'); if(!btn) return
+      duration=Number(btn.dataset.duration); syncDurationUI(); setSelection({ duration }); renderSlots(); updateSummary()
+    })
+    syncDurationUI()
+
+    const calMount=document.getElementById('calendarMount')
+    const slotsMount=document.getElementById('slotsMount')
+
+    function renderCalendarSection(){
+      const html=renderCalendar({ year: calYear, month: calMonth, selectedISO })
+      calMount.innerHTML=html
+      bindCalendar(calMount, { get year(){return calYear}, set year(v){calYear=v}, get month(){return calMonth}, set month(v){calMonth=v}, selectedISO, onSelect:(iso)=>{ selectedISO=iso; setSelection({ courtId: court.id, date: iso }) } }, renderCalendarSection)
+      // re-bind slots after calendar change because date changed
+      // Use delegated rerender: after bindCalendar's prev/next they call rerender which re-creates DOM, so we need to re-attach slot selection after
+      // Simpler: after calendar render, also render slots
+      renderSlots()
+      updateSummary()
+    }
+
+    let slotsToken=0
+    async function renderSlots(){
+      const token=++slotsToken
+      slotsMount.setAttribute('aria-busy','true')
+      slotsMount.innerHTML=slotSkeleton()
+      await mockDelay(220)
+      if(token!==slotsToken) return
+      // filter canFit by duration
+      // renderTimeSlots already marks occupied; we also disable slots that can't fit duration
+      let html = renderTimeSlots(court.id, selectedISO, slot)
+      // post-process: disable those that can't fit duration
+      const tmp=document.createElement('div'); tmp.innerHTML=html
+      tmp.querySelectorAll('[data-slot]').forEach(b=>{
+        const s=b.getAttribute('data-slot')
+        if(!canFit(s, duration)){ b.disabled=true; b.setAttribute('aria-disabled','true'); b.classList.add('opacity-40','cursor-not-allowed'); }
+      })
+      slotsMount.innerHTML=tmp.innerHTML
+      slotsMount.removeAttribute('aria-busy')
+      slotsMount.querySelectorAll('[data-slot]').forEach(b=> b.addEventListener('click', ()=>{
+        slot=b.getAttribute('data-slot'); setSelection({ courtId: court.id, date: selectedISO, duration, slot }); renderSlots(); updateSummary()
+      }))
+    }
+
+    function updateSummary(){
+      const d=new Date(selectedISO+'T12:00:00')
+      document.getElementById('summaryDate').textContent=d.toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric'})
+      document.getElementById('summaryYear').textContent=String(d.getFullYear())
+      if(slot){
+        document.getElementById('summaryTime').textContent=`${slot} – ${endTime(slot,duration)}`
+        document.getElementById('summaryDur').textContent=`${duration} Minutes`
+        const { courtFee, processingFee, total }=calcTotal(court.pricePerHour, duration)
+        document.getElementById('feeCourt').textContent=formatIDRShort(courtFee)
+        document.getElementById('feeProc').textContent=formatIDRShort(processingFee)
+        document.getElementById('feeTotal').textContent=formatIDRShort(total)
+        document.getElementById('btnConfirm').disabled=false
+      } else {
+        document.getElementById('summaryTime').textContent='Select a time slot'
+        document.getElementById('summaryDur').textContent=''
+        document.getElementById('feeCourt').textContent='—'
+        document.getElementById('feeProc').textContent='—'
+        document.getElementById('feeTotal').textContent='—'
+        document.getElementById('btnConfirm').disabled=true
+      }
+    }
+
+    // init selection persistence
+    setSelection({ courtId: court.id, date: selectedISO, duration, slot })
+    renderCalendarSection()
+
+    document.getElementById('btnConfirm').addEventListener('click', ()=>{
+      if(!slot){ toast('Please select a time slot'); return }
+      setSelection({ courtId: court.id, date: selectedISO, duration, slot })
+      location.href='/checkout.html'
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial Reports — Kinetic Court Admin</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/globals.css" />
+</head>
+<body class="bg-background">
+  <div data-admin-sidebar></div>
+  <div data-admin-topbar></div>
+  <main class="md:ml-64 pt-16 min-h-screen">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-8 py-8">
+      <div class="flex justify-between items-end">
+        <div>
+          <h1 class="text-3xl font-bold">Financial Reports</h1>
+          <p class="text-sm text-on-surface-variant mt-1">Monthly financial overview and revenue breakdown.</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="px-4 py-2 rounded-lg border border-surface-variant text-sm font-semibold bg-surface-container-lowest inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">calendar_today</span> This Month</button>
+          <button id="btnExport" class="px-4 py-2 rounded-lg bg-secondary-container text-on-secondary-container text-sm font-semibold inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">download</span> Export Data</button>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-12 gap-6 mt-8">
+        <div class="lg:col-span-8 bg-surface-container-lowest rounded-xl border border-surface-variant p-6">
+          <div class="flex justify-between items-center">
+            <h3 class="font-semibold">Revenue Trends</h3>
+            <span id="growth" class="text-xs font-semibold bg-mint-glace text-on-primary-fixed-variant px-3 py-1 rounded-full"></span>
+          </div>
+          <div class="mt-6 flex gap-3 items-end h-64" id="bars"></div>
+          <div class="flex justify-between mt-2 text-xs text-on-surface-variant px-1" id="barLabels"></div>
+        </div>
+
+        <div class="lg:col-span-4 bg-surface-container-lowest rounded-xl border border-surface-variant p-6">
+          <h3 class="font-semibold">Income Breakdown</h3>
+          <div class="mt-6 flex justify-center">
+            <div id="donut" class="w-48 h-48 rounded-full"></div>
+          </div>
+          <div class="mt-6 space-y-3 text-sm" id="breakdownList"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import { renderAdminSidebar, renderAdminTopbar, bindAdminLayout } from '/src/js/components/adminLayout.js'
+    import { requireAdmin } from '/src/js/stores/authStore.js'
+    import { monthlyRevenue, incomeBreakdown, growthPct } from '/src/js/data/finance.js'
+    import { formatIDRShort } from '/src/js/lib/pricing.js'
+    import { toast } from '/src/js/components/toast.js'
+    if(!requireAdmin()){}
+    document.querySelector('[data-admin-sidebar]').innerHTML=renderAdminSidebar('reports')
+    document.querySelector('[data-admin-topbar]').innerHTML=renderAdminTopbar()
+    bindAdminLayout()
+
+    document.getElementById('growth').textContent=`+${growthPct()}% vs Last Month`
+
+    const max=Math.max(...monthlyRevenue.map(m=> m.revenue))
+    document.getElementById('bars').innerHTML=monthlyRevenue.map(m=>{
+      const h=Math.round((m.revenue/max)*100)
+      const isLast=m.month===monthlyRevenue.at(-1).month
+      return `<div class="flex-1 flex flex-col items-center gap-2"><div title="${formatIDRShort(m.revenue)}" class="w-full rounded-t-md ${isLast?'bg-secondary-container':'bg-primary-container'} hover:opacity-80 transition" style="height:${h}%"></div></div>`
+    }).join('')
+    document.getElementById('barLabels').innerHTML=monthlyRevenue.map(m=> `<span>${m.month}</span>`).join('')
+
+    const total=incomeBreakdown.reduce((s,x)=> s+x.value,0)
+    let acc=0
+    const stops=incomeBreakdown.map(b=>{ const start=acc; acc+=b.value/total*100; return `${b.color} ${start}% ${acc}%` }).join(', ')
+    document.getElementById('donut').style.background=`conic-gradient(${stops})`
+    document.getElementById('breakdownList').innerHTML=incomeBreakdown.map(b=>`
+      <div class="flex justify-between items-center"><span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background:${b.color}"></span> ${b.label}</span><span class="font-semibold">${b.value}%</span></div>
+    `).join('')
+
+    document.getElementById('btnExport').addEventListener('click', ()=>{
+      const csv=['Month,Revenue', ...monthlyRevenue.map(m=> `${m.month},${m.revenue}`)].join('\n')
+      const blob=new Blob([csv], {type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='revenue.csv'; a.click(); URL.revokeObjectURL(url); toast('Exported revenue.csv')
+    })
+  </script>
+</body>
+</html>

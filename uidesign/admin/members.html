@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Member Management — Kinetic Court Admin</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/globals.css" />
+</head>
+<body class="bg-background">
+  <div data-admin-sidebar></div>
+  <div data-admin-topbar></div>
+  <main class="md:ml-64 pt-16 min-h-screen">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-8 py-8">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold">Member Management</h1>
+          <p class="text-sm text-on-surface-variant mt-1">View, filter, and manage padel club memberships.</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnExport" class="px-4 py-2 rounded-lg border border-surface-variant bg-surface-container-lowest text-sm font-semibold hover:bg-surface-container inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">download</span> Export</button>
+          <button id="btnAddMember" class="px-4 py-2 rounded-lg bg-primary text-on-primary text-sm font-semibold hover:opacity-90 inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">person_add</span> Add Member</button>
+        </div>
+      </div>
+
+      <div class="flex flex-col lg:flex-row gap-4 mt-6 justify-between">
+        <div class="flex flex-wrap gap-2" id="tierFilters">
+          <button data-tier="all" class="tier-btn px-4 py-1.5 rounded-full bg-inverse-surface text-inverse-on-surface text-sm font-semibold">All Members</button>
+          <button data-tier="Gold" class="tier-btn px-4 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-sm font-semibold hover:bg-surface-variant">Gold</button>
+          <button data-tier="Silver" class="tier-btn px-4 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-sm font-semibold hover:bg-surface-variant">Silver</button>
+          <button data-tier="Basic" class="tier-btn px-4 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-sm font-semibold hover:bg-surface-variant">Basic</button>
+        </div>
+        <label class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+          <input id="search" placeholder="Search name or phone..." class="pl-10 pr-4 py-2 rounded-lg border border-surface-variant bg-surface-cream text-sm w-72 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+        </label>
+      </div>
+
+      <div class="mt-6 bg-surface-container-lowest rounded-xl border border-surface-variant overflow-hidden">
+        <div class="hidden md:grid grid-cols-12 gap-4 p-3 bg-surface-container-low/50 border-b border-surface-variant text-xs font-semibold text-on-surface-variant uppercase tracking-widest">
+          <div class="col-span-3">Member</div><div class="col-span-3">Contact</div><div class="col-span-2">Membership</div><div class="col-span-2">Status</div><div class="col-span-2">Last Booking</div>
+        </div>
+        <div id="rows" aria-live="polite"></div>
+        <div class="p-3 border-t border-surface-variant flex justify-between items-center text-xs text-on-surface-variant">
+          <span id="count"></span>
+          <div class="flex gap-1" id="pagination"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import { renderAdminSidebar, renderAdminTopbar, bindAdminLayout } from '/src/js/components/adminLayout.js'
+    import { requireAdmin } from '/src/js/stores/authStore.js'
+    import { members } from '/src/js/data/members.js'
+    import { toast } from '/src/js/components/toast.js'
+    import { memberRowSkeleton } from '/src/js/components/skeleton.js'
+    import { mockDelay } from '/src/js/lib/delay.js'
+    import { initLazyImages } from '/src/js/lib/lazyLoad.js'
+    if(!requireAdmin()){}
+    document.querySelector('[data-admin-sidebar]').innerHTML=renderAdminSidebar('members')
+    document.querySelector('[data-admin-topbar]').innerHTML=renderAdminTopbar()
+    bindAdminLayout()
+
+    let tier='all', q='', page=1, perPage=4
+    const rowsEl=document.getElementById('rows')
+    const countEl=document.getElementById('count')
+    const pagEl=document.getElementById('pagination')
+
+    function filtered(){
+      return members.filter(m=>{
+        if(tier!=='all' && m.tier!==tier) return false
+        if(q && !m.name.toLowerCase().includes(q) && !m.phone.includes(q)) return false
+        return true
+      })
+    }
+
+    let renderToken=0
+    async function render(){
+      const token=++renderToken
+      rowsEl.setAttribute('aria-busy','true')
+      rowsEl.innerHTML=memberRowSkeleton(perPage)
+      pagEl.innerHTML=''
+      countEl.textContent='Loading…'
+      await mockDelay(280)
+      if(token!==renderToken) return
+      rowsEl.removeAttribute('aria-busy')
+      const list=filtered()
+      const totalPages=Math.max(1, Math.ceil(list.length/perPage))
+      if(page>totalPages) page=totalPages
+      const slice=list.slice((page-1)*perPage, page*perPage)
+      const tierBadge=(t)=> t==='Gold' ? 'bg-secondary-container text-on-secondary-container' : t==='Silver' ? 'bg-surface-variant text-on-surface-variant' : 'bg-sky-tint text-tertiary'
+      rowsEl.innerHTML=slice.map(m=>`
+        <div class="grid md:grid-cols-12 gap-2 p-4 border-b border-surface-variant/20 items-center hover:bg-surface text-sm">
+          <div class="md:col-span-3 flex items-center gap-3">
+            ${m.avatar ? `<img data-src="${m.avatar}" alt="${m.name}" width="36" height="36" class="w-9 h-9 rounded-full object-cover border border-surface-variant img-fade" loading="lazy" decoding="async" />` : `<div class="w-9 h-9 rounded-full bg-lavender-mist text-secondary grid place-items-center font-semibold">${m.name[0]}</div>`}
+            <span class="font-medium">${m.name}</span>
+          </div>
+          <div class="md:col-span-3 text-on-surface-variant">${m.phone}</div>
+          <div class="md:col-span-2"><span class="px-3 py-1 rounded-full text-xs font-semibold ${tierBadge(m.tier)}">${m.tier} Member</span></div>
+          <div class="md:col-span-2 inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full ${m.status==='Active'?'bg-primary':'bg-error'}"></span> ${m.status}</div>
+          <div class="md:col-span-2 text-on-surface-variant">${m.lastBooking}</div>
+        </div>
+      `).join('') || `<div class="p-8 text-center text-sm text-secondary">No members found.</div>`
+      if(slice.some(m=> m.avatar)) initLazyImages(rowsEl)
+      countEl.textContent=`Showing ${slice.length? (page-1)*perPage+1:0} to ${(page-1)*perPage+slice.length} of ${list.length} members`
+      let html=''
+      const btn=(p,label,active,disabled)=>`<button data-page="${p}" ${disabled?'disabled':''} class="w-8 h-8 rounded text-xs font-semibold ${active?'bg-primary text-on-primary':'hover:bg-surface-container'} ${disabled?'opacity-40':''}">${label}</button>`
+      html+=btn(page-1,'‹',false,page===1)
+      for(let i=1;i<=totalPages;i++) html+=btn(i,i,i===page,false)
+      html+=btn(page+1,'›',false,page===totalPages)
+      pagEl.innerHTML=html
+      pagEl.querySelectorAll('[data-page]').forEach(b=> b.addEventListener('click', ()=>{ const p=Number(b.dataset.page); if(p>=1&&p<=totalPages){ page=p; render() }}))
+    }
+
+    document.querySelectorAll('.tier-btn').forEach(b=> b.addEventListener('click', ()=>{
+      tier=b.dataset.tier
+      document.querySelectorAll('.tier-btn').forEach(x=>{
+        x.className = x.dataset.tier===tier ? 'tier-btn px-4 py-1.5 rounded-full bg-inverse-surface text-inverse-on-surface text-sm font-semibold' : 'tier-btn px-4 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-sm font-semibold hover:bg-surface-variant'
+      })
+      page=1; render()
+    }))
+    document.getElementById('search').addEventListener('input', (e)=>{ q=e.target.value.toLowerCase(); page=1; render() })
+    document.getElementById('btnExport').addEventListener('click', ()=>{
+      const list=filtered()
+      const csv=['Name,Phone,Tier,Status,Last Booking', ...list.map(m=> `${m.name},${m.phone},${m.tier},${m.status},${m.lastBooking}`)].join('\n')
+      const blob=new Blob([csv], {type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='members.csv'; a.click(); URL.revokeObjectURL(url); toast('Exported members.csv')
+    })
+    document.getElementById('btnAddMember').addEventListener('click', ()=> toast('Add Member — connect to backend to enable.'))
+    render()
+  </script>
+</body>
+</html>

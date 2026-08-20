@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/* Serene Athleticism — Kinetic Court Design Tokens (single source of truth)
+   Ported from uidesign/src/styles/globals.css — Tailwind v4 @theme compatible */
+
+@theme {
+  --color-primary: #3a6758;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #a7d7c5;
+  --color-on-primary-container: #325f51;
+  --color-primary-fixed: #bcedda;
+  --color-primary-fixed-dim: #a1d1bf;
+  --color-on-primary-fixed: #002118;
+  --color-on-primary-fixed-variant: #214f41;
+  --color-secondary: #67577f;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #e3cffe;
+  --color-on-secondary-container: #66567e;
+  --color-secondary-fixed: #ecdcff;
+  --color-secondary-fixed-dim: #d2beed;
+  --color-on-secondary-fixed: #221438;
+  --color-on-secondary-fixed-variant: #4e4066;
+  --color-tertiary: #42636e;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #b0d3df;
+  --color-on-tertiary-container: #3a5c66;
+  --color-tertiary-fixed: #c5e8f5;
+  --color-tertiary-fixed-dim: #a9ccd8;
+  --color-on-tertiary-fixed: #001f27;
+  --color-on-tertiary-fixed-variant: #2a4b55;
+  --color-background: #f6fafe;
+  --color-on-background: #171c20;
+  --color-surface: #f6fafe;
+  --color-surface-dim: #d6dadf;
+  --color-surface-bright: #f6fafe;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f0f4f9;
+  --color-surface-container: #eaeef3;
+  --color-surface-container-high: #e4e9ed;
+  --color-surface-container-highest: #dfe3e7;
+  --color-surface-variant: #dfe3e7;
+  --color-on-surface: #171c20;
+  --color-on-surface-variant: #404945;
+  --color-inverse-surface: #2c3135;
+  --color-inverse-on-surface: #edf1f6;
+  --color-inverse-primary: #a1d1bf;
+  --color-outline: #717975;
+  --color-outline-variant: #c0c8c3;
+  --color-surface-tint: #3a6758;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-mint-glace: #e8f5f1;
+  --color-lavender-mist: #f3ebf9;
+  --color-sky-tint: #edf7fa;
+  --color-surface-cream: #f9fafb;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  --spacing-gutter: 24px;
+  --spacing-margin-mobile: 16px;
+  --spacing-margin-desktop: 48px;
+  --spacing-container-max: 1200px;
+
+  --font-poppins: "Poppins", sans-serif;
+}
+
+/* Base */
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-poppins);
+  background: var(--color-background);
+  color: var(--color-on-background);
+  -webkit-font-smoothing: antialiased;
+}
+a { text-underline-offset: 2px; }
+::selection { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
+
+/* Type scale — utilities Tailwind v4 doesn't generate for custom theme without extra config */
+.font-display-lg { font-size: 48px; line-height: 1.1; letter-spacing: -0.02em; font-weight: 700; }
+.font-display-lg-mobile { font-size: 36px; line-height: 1.2; letter-spacing: -0.02em; font-weight: 700; }
+.font-headline-lg { font-size: 32px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 600; }
+.font-headline-md { font-size: 24px; line-height: 1.3; font-weight: 600; }
+.font-body-lg { font-size: 18px; line-height: 1.6; font-weight: 400; }
+.font-body-md { font-size: 16px; line-height: 1.5; font-weight: 400; }
+.font-label-bold { font-size: 14px; line-height: 1.4; letter-spacing: 0.02em; font-weight: 600; }
+.font-caption { font-size: 12px; line-height: 1.4; font-weight: 500; }
+
+/* Accessible focus */
+:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-primary) 40%, transparent); outline-offset: 2px; }
+
+/* Card shadow token */
+.card-shadow { box-shadow: 0 4px 24px -4px rgba(58,103,88,.05), 0 2px 8px -2px rgba(58,103,88,.02); }
+.card-shadow-hover:hover { box-shadow: 0 12px 40px rgba(0,0,0,.06); }
+
+/* Glass */
+.glass { background: color-mix(in srgb, var(--color-surface) 80%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+
+/* Skeleton + shimmer */
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.skeleton { background: var(--color-surface-container); position: relative; overflow: hidden; }
+.skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: translateX(-100%); animation: shimmer 1.4s infinite; }
+.skeleton-line { height: 12px; border-radius: 999px; background: var(--color-surface-container); position: relative; overflow: hidden; }
+.skeleton-line::after { content:""; position:absolute; inset:0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: translateX(-100%); animation: shimmer 1.4s infinite; }
+.skeleton-avatar { border-radius: 999px; background: var(--color-surface-container); position: relative; overflow: hidden; }
+.skeleton-avatar::after { content:""; position:absolute; inset:0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: translateX(-100%); animation: shimmer 1.4s infinite; }
+
+/* Lazy image fade */
+.img-fade { opacity: 0; transition: opacity .5s ease; }
+.img-fade.is-loaded { opacity: 1; }
+.img-error-fallback { display: grid; place-items: center; background: var(--color-surface-variant); color: var(--color-on-surface-variant); }
+
+/* Animations respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  .skeleton::after, .skeleton-line::after, .skeleton-avatar::after { animation: none !important; }
+  .img-fade { opacity: 1 !important; transition: none !important; }
+}

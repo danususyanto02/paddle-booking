@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Court Management — Kinetic Court Admin</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles/globals.css" />
+</head>
+<body class="bg-background">
+  <div data-admin-sidebar></div>
+  <div data-admin-topbar></div>
+  <main class="md:ml-64 pt-16 min-h-screen">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-8 py-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold">Court Management</h1>
+          <p class="text-sm text-on-surface-variant mt-1">Monitor and manage your court availability in real-time.</p>
+        </div>
+        <div class="flex gap-2" id="courtFilters">
+          <button data-filter="all" class="filter-btn px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-semibold">All Courts</button>
+          <button data-filter="available" class="filter-btn px-4 py-2 rounded-full border border-outline-variant text-sm font-semibold hover:bg-mint-glace">Available</button>
+          <button data-filter="occupied" class="filter-btn px-4 py-2 rounded-full border border-outline-variant text-sm font-semibold hover:bg-mint-glace">Occupied</button>
+          <button data-filter="maintenance" class="filter-btn px-4 py-2 rounded-full border border-outline-variant text-sm font-semibold hover:bg-mint-glace">Maintenance</button>
+        </div>
+      </div>
+      <div id="grid" class="grid md:grid-cols-2 gap-6 mt-8" aria-live="polite"></div>
+    </div>
+  </main>
+  <script type="module">
+    import { renderAdminSidebar, renderAdminTopbar, bindAdminLayout } from '/src/js/components/adminLayout.js'
+    import { requireAdmin } from '/src/js/stores/authStore.js'
+    import { courts } from '/src/js/data/courts.js'
+    import { formatIDRShort } from '/src/js/lib/pricing.js'
+    import { courtCardSkeleton } from '/src/js/components/skeleton.js'
+    import { initLazyImages } from '/src/js/lib/lazyLoad.js'
+    import { mockDelay } from '/src/js/lib/delay.js'
+    if(!requireAdmin()){}
+    document.querySelector('[data-admin-sidebar]').innerHTML=renderAdminSidebar('courts')
+    document.querySelector('[data-admin-topbar]').innerHTML=renderAdminTopbar()
+    bindAdminLayout()
+
+    let filter='all'
+    let token=0
+    async function render(){
+      const t=++token
+      const grid=document.getElementById('grid')
+      grid.setAttribute('aria-busy','true')
+      grid.innerHTML=courtCardSkeleton(4)
+      await mockDelay(280)
+      if(t!==token) return
+      grid.removeAttribute('aria-busy')
+      const list= filter==='all' ? courts : courts.filter(c=> c.status===filter)
+      grid.innerHTML=list.map(c=>{
+        const badge = c.status==='available' ? `<span class="inline-flex items-center gap-1 bg-mint-glace text-on-primary-fixed-variant text-xs px-3 py-1 rounded-full"><span class="w-2 h-2 rounded-full bg-primary"></span> Available</span>`
+          : c.status==='occupied' ? `<span class="inline-flex items-center gap-1 bg-surface-variant text-on-surface text-xs px-3 py-1 rounded-full"><span class="w-2 h-2 rounded-full bg-outline"></span> Occupied${c.until?` · Until ${c.until}`:''}</span>`
+          : `<span class="inline-flex items-center gap-1 bg-error-container text-on-error-container text-xs px-3 py-1 rounded-full"><span class="material-symbols-outlined text-[14px]">build</span> Maintenance</span>`
+        const action = c.status==='maintenance'
+          ? `<button disabled class="w-full py-2.5 rounded-lg border border-surface-variant/50 text-outline text-sm font-semibold cursor-not-allowed">Schedule Unavailable</button>`
+          : `<a href="/booking.html?courtId=${c.id}" class="w-full inline-flex justify-center py-2.5 rounded-lg border border-surface-variant bg-surface-cream text-sm font-semibold hover:bg-mint-glace">View Schedule</a>`
+        return `
+        <div class="bg-surface-container-lowest rounded-xl border border-surface-variant overflow-hidden">
+          <div class="relative h-48 overflow-hidden bg-surface-container">
+            <img data-src="${c.image}" alt="${c.name}" width="600" height="400" class="w-full h-full object-cover img-fade ${c.status==='maintenance'?'grayscale opacity-60':''}" loading="lazy" decoding="async" />
+            <div class="absolute top-3 left-3">${badge}</div>
+          </div>
+          <div class="p-5">
+            <div class="flex justify-between">
+              <div><div class="font-semibold">${c.name}</div><div class="text-sm text-on-surface-variant inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">layers</span> ${c.surface} · ${c.type}</div></div>
+              <div class="text-right"><div class="font-semibold text-primary">${formatIDRShort(c.pricePerHour)}</div><div class="text-xs text-secondary">/hour</div></div>
+            </div>
+            <div class="mt-4">${action}</div>
+          </div>
+        </div>`
+      }).join('') || `<div class="col-span-2 text-center py-12 text-sm text-secondary">No courts for this filter.</div>`
+      if(list.length) initLazyImages(grid)
+    }
+    document.querySelectorAll('.filter-btn').forEach(b=> b.addEventListener('click', ()=>{
+      filter=b.dataset.filter
+      document.querySelectorAll('.filter-btn').forEach(x=>{
+        x.className = x.dataset.filter===filter ? 'filter-btn px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-semibold' : 'filter-btn px-4 py-2 rounded-full border border-outline-variant text-sm font-semibold hover:bg-mint-glace'
+      })
+      render()
+    }))
+    render()
+  </script>
+</body>
+</html>
