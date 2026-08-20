@@ -33,7 +33,7 @@
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
 | T08 | Auth.js Credentials + JWT Bearer | M | T04 | DONE | Login generic 401, token tidak di localStorage |
-| T09 | RBAC effective permissions + MenuFeature paddle (0000008–0000011) | M | T08 | TODO | Tanpa AM → 403, inactive feature → 404 |
+| T09 | RBAC effective permissions + MenuFeature paddle (0000008–0000011) | M | T08 | DONE | Tanpa AM → 403, inactive feature → 404 |
 | T10 | CSRF protection untuk cookie mutations | S | T08 | TODO | Forged cookie POST → 403 |
 
 ## E4 — Shared UI — Migrasi uidesign → Next.js

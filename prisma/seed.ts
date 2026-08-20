@@ -18,6 +18,7 @@ type FeatureDef = {
 };
 
 // Seed order — jangan diubah tanpa bump PermissionSequence secara eksplisit
+// Spec plan: 0000001 Users … 0000007 Audit Logs, then paddle 0000008 Courts, 0000009 Bookings, 0000010 Members, 0000011 Reports
 const FEATURES: FeatureDef[] = [
   { key: "users", name: "Users", route: "/dashboard/users", icon: "users", sortOrder: 10, isSystem: true },
   { key: "roles", name: "Roles", route: "/dashboard/roles", icon: "shield", sortOrder: 20, isSystem: true },
@@ -26,6 +27,10 @@ const FEATURES: FeatureDef[] = [
   { key: "locked-records", name: "Locked Records", route: "/dashboard/locked-records", icon: "lock", sortOrder: 50, isSystem: true },
   { key: "external-api-demo", name: "External API Demo", route: "/dashboard/external-api-demo", icon: "plug", sortOrder: 60, isSystem: false },
   { key: "audit-logs", name: "Audit Logs", route: "/dashboard/audit-logs", icon: "scroll", sortOrder: 70, isSystem: true },
+  { key: "courts", name: "Courts", route: "/dashboard/courts", icon: "court", sortOrder: 80, isSystem: false },
+  { key: "bookings", name: "Bookings", route: "/dashboard/bookings", icon: "calendar", sortOrder: 90, isSystem: false },
+  { key: "members", name: "Members", route: "/dashboard/members", icon: "users-round", sortOrder: 100, isSystem: false },
+  { key: "reports", name: "Reports", route: "/dashboard/reports", icon: "chart", sortOrder: 110, isSystem: false },
 ];
 
 const PREFIXES = [
@@ -273,12 +278,12 @@ async function main() {
   const permCount = await prisma.permission.count();
   const courtCount = await prisma.court.count({ where: { deletedAt: null } });
   console.log(`[seed] Done. PermissionSequence nextVal=${seq?.nextVal} | Permission count=${permCount} | Courts=${courtCount}`);
-  // Harapan: 7 features * 4 = 28 permissions, nextVal = 8, 8 courts
-  if (permCount !== 28) {
-    console.warn(`[seed] WARN: expected 28 permissions (7*4), got ${permCount}`);
+  // Harapan: 11 features * 4 = 44 permissions, nextVal = 12, 8 courts
+  if (permCount !== 44) {
+    console.warn(`[seed] WARN: expected 44 permissions (11*4), got ${permCount}`);
   }
-  if (seq?.nextVal !== 8) {
-    console.warn(`[seed] WARN: expected nextVal=8, got ${seq?.nextVal}`);
+  if (seq?.nextVal !== 12) {
+    console.warn(`[seed] WARN: expected nextVal=12, got ${seq?.nextVal}`);
   }
   if (courtCount !== 8) {
     console.warn(`[seed] WARN: expected 8 courts, got ${courtCount}`);

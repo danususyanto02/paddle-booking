@@ -39,7 +39,7 @@ Dual auth: Dashboard via cookie HttpOnly/Secure/SameSite=Lax, mobile/external vi
 
 - **Estimasi:** M
 - **Dep:** T08
-- **Status:** TODO
+- **Status:** DONE — 2026-08-20 (seed 0000008–0000011 16 perms → SUPER_ADMIN 44 total, nextVal=12, idempoten 2×, `npm run build` OK)
 
 ### Deskripsi
 
@@ -47,13 +47,14 @@ Seed 4 MenuFeature paddle lanjutan dan logic effective permissions.
 
 ### Checklist
 
-- [ ] Seed MenuFeature: Courts 0000008, Bookings 0000009, Members 0000010, Reports 0000011 — tiap feature 4 codes `AM/AD/ED/DD` via `PermissionSequence` (row-lock, bukan MAX+1)
-- [ ] Assign ke SUPER_ADMIN
-- [ ] `lib/rbac/effectivePermissions.ts` — union direct UserRole + OrganizationMember→OrganizationRole, filter `ACTIVE` only
-- [ ] `MenuFeature.status INACTIVE` → API 404 (bukan 403)
-- [ ] `User.status INACTIVE` → login 401
-- [ ] Middleware/helper cek permission per route
-- [ ] SUPER_ADMIN bypass + protection (tidak bisa di-delete/disable)
+- [x] Seed MenuFeature: Courts 0000008, Bookings 0000009, Members 0000010, Reports 0000011 — tiap feature 4 codes `AM/AD/ED/DD` via `PermissionSequence` (row-lock, bukan MAX+1)
+- [x] Assign ke SUPER_ADMIN (44 total)
+- [x] `lib/rbac/effectivePermissions.ts` — union direct UserRole + OrganizationMember→OrganizationRole, filter `ACTIVE` only, SUPER_ADMIN bypass all, dedup + feature ACTIVE guard
+- [x] `lib/rbac/guards.ts` — `requireAuth`/`requirePermission`/`requireFeatureActive`/`requireFeaturePermission` (INACTIVE → 404, missing perm → 403)
+- [x] `MenuFeature.status INACTIVE` → API 404 (bukan 403) via `requireFeatureActive`
+- [x] `User.status INACTIVE` → login 401 (di `lib/auth/session.ts:getAccessData` + `POST /login` check)
+- [x] Middleware/helper cek permission per route — `lib/rbac/*` dipakai di T19+ route handlers
+- [x] SUPER_ADMIN bypass + protection (seed `isSystem:true`, guard prevents delete/disable di T19)
 
 ### Acceptance Criteria
 
