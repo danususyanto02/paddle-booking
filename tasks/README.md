@@ -17,8 +17,8 @@
 |---|---|---|---|---|---|
 | T01 | Init Next.js project dari starter-kit spec | S | — | DONE | `npm run dev/build` jalan, token Serene Athleticism ter-load |
 | T02 | Env validation & config (`lib/env.ts`) | S | T01 | DONE | Boot log tanpa secret, exit 1 jika invalid |
-| T03 | Prisma setup & soft-delete baseline | M | T02 | TODO | `prisma migrate dev` & `generate` sukses |
-| T04 | Seed idempoten starter-kit (0000001–0000007) | M | T03 | TODO | Re-run seed tidak duplikat, SUPER_ADMIN dapat semua permission |
+| T03 | Prisma setup & soft-delete baseline | M | T02 | DONE | `prisma migrate dev` & `generate` sukses |
+| T04 | Seed idempoten starter-kit (0000001–0000007) | M | T03 | DONE | Re-run seed tidak duplikat, SUPER_ADMIN dapat semua permission |
 
 ## E2 — Domain Padel — Data Model
 

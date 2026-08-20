@@ -6,7 +6,6 @@ const eslintConfig = defineConfig([
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
   {
     rules: {
-      // Ban raw <table> / <select> outside shared UI — dashboard must use DataTable / Select
       "no-restricted-syntax": [
         "error",
         {
@@ -22,7 +21,6 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  // Allow raw table/select inside shared UI and outside dashboard
   {
     files: ["components/ui/**", "uidesign/**"],
     rules: {
