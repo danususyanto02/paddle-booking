@@ -24,15 +24,15 @@
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T05 | Model Court & Booking + ResourceType | M | T04 | TODO | Migration ok |
-| T06 | Seed Courts (8 data) + Members finance mock | S | T05 | TODO | `GET /api/v1/courts` return 8 rows |
-| T07 | Lib pricing & slots (port uidesign) | S | T05 | TODO | `calcTotal(180000,90)=285000`, `canFit` cegah >22:00 |
+| T05 | Model Court & Booking + ResourceType | M | T04 | DONE | Migration ok |
+| T06 | Seed Courts (8 data) + Members finance mock | S | T05 | DONE | `GET /api/v1/courts` return 8 rows |
+| T07 | Lib pricing & slots (port uidesign) | S | T05 | DONE | `calcTotal(180000,90)=285000`, `canFit` cegah >22:00 |
 
 ## E3 — Auth, RBAC, Keamanan
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T08 | Auth.js Credentials + JWT Bearer | M | T04 | TODO | Login generic 401, token tidak di localStorage |
+| T08 | Auth.js Credentials + JWT Bearer | M | T04 | DONE | Login generic 401, token tidak di localStorage |
 | T09 | RBAC effective permissions + MenuFeature paddle (0000008–0000011) | M | T08 | TODO | Tanpa AM → 403, inactive feature → 404 |
 | T10 | CSRF protection untuk cookie mutations | S | T08 | TODO | Forged cookie POST → 403 |
 

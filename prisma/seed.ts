@@ -221,6 +221,44 @@ async function seedSystemSettings() {
   console.log("[seed] SystemSetting OK");
 }
 
+async function seedCourts() {
+  // Inline import to avoid circular deps; reuses same COURTS definition as seed-courts.ts
+  // Keep in sync with prisma/seed-courts.ts
+  const { PrismaClient: PC } = await import("@prisma/client");
+  void PC;
+  const U = (id: string, w = 1200) =>
+    `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;
+  const courts = [
+    { code: "alpha", name: "Court Alpha", location: "Kinetic Downtown Hub", type: "INDOOR" as const, surface: "Premium Artificial Turf", pricePerHour: 180000, rating: 4.9, reviews: 128, amenities: ["Cafe","Parking","Showers"], image: U("photo-1622163642998-1ea32b0bbc67", 1200), status: "AVAILABLE" as const, badge: "Premium", sortOrder: 10 },
+    { code: "panoramic", name: "Court Panoramic", location: "Kinetic Riverside", type: "OUTDOOR" as const, surface: "Panoramic Glass", pricePerHour: 140000, rating: 4.7, reviews: 86, amenities: ["Parking"], image: U("photo-1595435934249-5df7ed86e1c0", 1200), status: "AVAILABLE" as const, badge: null, sortOrder: 20 },
+    { code: "center", name: "Center Court", location: "Kinetic Downtown Hub", type: "INDOOR" as const, surface: "Pro Size Turf", pricePerHour: 220000, rating: 4.9, reviews: 215, amenities: ["Cafe","Parking","Showers","Pro Shop"], image: U("photo-1554068865-24cecd4e34b8", 1200), status: "AVAILABLE" as const, badge: "Pro Size", sortOrder: 30 },
+    { code: "east", name: "Court East", location: "Kinetic Riverside", type: "OUTDOOR" as const, surface: "Acrylic Hard Court", pricePerHour: 120000, rating: 4.6, reviews: 54, amenities: ["Parking"], image: U("photo-1517649763962-0c623066013b", 1200), status: "MAINTENANCE" as const, badge: null, sortOrder: 40 },
+    { code: "velocity", name: "Velocity Arena", location: "Kinetic Westside", type: "INDOOR" as const, surface: "Textured Acrylic", pricePerHour: 160000, rating: 4.8, reviews: 92, amenities: ["Cafe","Showers"], image: U("photo-1542144582-1ba00456b5e3", 1200), status: "AVAILABLE" as const, badge: null, sortOrder: 50 },
+    { code: "skyline", name: "Skyline Courts", location: "Skyline Rooftop", type: "ROOFTOP" as const, surface: "Panoramic Outdoor", pricePerHour: 200000, rating: 4.9, reviews: 178, amenities: ["Cafe","Parking"], image: U("photo-1574629810360-214f3774381b", 1200), status: "AVAILABLE" as const, badge: "Rooftop", sortOrder: 60 },
+    { code: "beta", name: "Court Beta", location: "Kinetic Downtown Hub", type: "INDOOR" as const, surface: "Artificial Turf", pricePerHour: 150000, rating: 4.7, reviews: 64, amenities: ["Showers","Parking"], image: U("photo-1593766787871-bb0d53b5a0f1", 1200), status: "OCCUPIED" as const, badge: null, sortOrder: 70 },
+    { code: "gamma", name: "Court Gamma", location: "Kinetic Westside", type: "COVERED" as const, surface: "Semi-Indoor Turf", pricePerHour: 135000, rating: 4.6, reviews: 41, amenities: ["Cafe"], image: U("photo-1551698618-1dfe5d97d256", 1200), status: "AVAILABLE" as const, badge: null, sortOrder: 80 },
+  ];
+  for (const c of courts) {
+    await prisma.court.upsert({
+      where: { code: c.code },
+      update: {
+        name: c.name, location: c.location, type: c.type as never, surface: c.surface,
+        pricePerHour: c.pricePerHour, rating: c.rating, reviews: c.reviews,
+        amenities: c.amenities, image: c.image, status: c.status as never,
+        badge: c.badge, sortOrder: c.sortOrder, deletedAt: null,
+      },
+      create: {
+        code: c.code, name: c.name, location: c.location, type: c.type as never, surface: c.surface,
+        pricePerHour: c.pricePerHour, rating: c.rating, reviews: c.reviews,
+        amenities: c.amenities, image: c.image, status: c.status as never,
+        badge: c.badge, sortOrder: c.sortOrder,
+      },
+    });
+  }
+  const count = await prisma.court.count({ where: { deletedAt: null } });
+  console.log(`[seed] Courts OK: ${count}/8`);
+}
+
 async function main() {
   console.log("[seed] Starting...");
 
@@ -228,17 +266,22 @@ async function main() {
   await seedSuperAdmin();
   await seedFeaturesAndPermissions();
   await seedSystemSettings();
+  await seedCourts();
 
   // Verifikasi ringkas
   const seq = await prisma.permissionSequence.findUnique({ where: { id: 1 } });
   const permCount = await prisma.permission.count();
-  console.log(`[seed] Done. PermissionSequence nextVal=${seq?.nextVal} | Permission count=${permCount}`);
-  // Harapan: 7 features * 4 = 28 permissions, nextVal = 8
+  const courtCount = await prisma.court.count({ where: { deletedAt: null } });
+  console.log(`[seed] Done. PermissionSequence nextVal=${seq?.nextVal} | Permission count=${permCount} | Courts=${courtCount}`);
+  // Harapan: 7 features * 4 = 28 permissions, nextVal = 8, 8 courts
   if (permCount !== 28) {
     console.warn(`[seed] WARN: expected 28 permissions (7*4), got ${permCount}`);
   }
   if (seq?.nextVal !== 8) {
     console.warn(`[seed] WARN: expected nextVal=8, got ${seq?.nextVal}`);
+  }
+  if (courtCount !== 8) {
+    console.warn(`[seed] WARN: expected 8 courts, got ${courtCount}`);
   }
 }
 
