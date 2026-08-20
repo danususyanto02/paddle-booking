@@ -22,8 +22,8 @@ dist
 .env.production.local
 .env.*.local
 
-# prisma
-prisma/migrations/
+# prisma — keep migrations, ignore generated client
+# (migrations are committed; generated client is not)
 
 # misc
 .DS_Store

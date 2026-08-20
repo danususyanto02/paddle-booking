@@ -306,20 +306,26 @@ export function getEnv(): Env {
 // Auto-validate on import (fail-fast sebelum Prisma init).
 // Di Next.js, import ini akan dieksekusi di server saat boot.
 // Untuk test, set env vars sebelum import atau mock getEnv().
+const _isBuildPhase =
+  process.env.NEXT_PHASE === "phase-production-build" ||
+  process.env.npm_lifecycle_event === "build";
+
 let _autoValidated = false;
 try {
-  // Skip auto-validate in edge/test where env may be intentionally incomplete —
-  // tapi tetap validate jika caller import dan panggil getEnv().
-  // Kita hanya auto-validate jika DATABASE_URL ada (indikasi app boot, bukan lint/type-check).
-  if (process.env.DATABASE_URL || process.env.AUTH_SECRET) {
+  // Skip auto-validate during `next build` prerender (collect page data) — it sets NODE_ENV=production
+  // but .env still has dev defaults (superadmin/superadmin). Runtime (dev/start/Docker) will still fail-fast via register() / getEnv().
+  if (!_isBuildPhase && (process.env.DATABASE_URL || process.env.AUTH_SECRET)) {
     getEnv();
     _autoValidated = true;
   }
 } catch (err) {
-  // Re-throw agar process exit 1 (jangan swallow)
-  // Next.js akan menampilkan error ini di build/dev boot
-  console.error((err as Error).message);
-  throw err;
+  // During build, log warning instead of throwing to avoid breaking prerender
+  if (_isBuildPhase) {
+    console.warn((err as Error).message, "(ignored during build)");
+  } else {
+    console.error((err as Error).message);
+    throw err;
+  }
 }
 
 // For testing: reset cache

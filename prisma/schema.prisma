@@ -1,0 +1,407 @@
+// Kinetic Court — Prisma Schema
+// Spec: starter-kit-spec.md § Data Model, Soft Delete, RBAC, Record Locking, Audit Log, Rate Limiting
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ──────────────────────────────────────────────────────────────────
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum RoleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FeatureStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AuthMethod {
+  BEARER
+  COOKIE
+  NONE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  ROLE_ASSIGN
+  PERMISSION_ASSIGN
+  MEMBER_ASSIGN
+  LOCK_ACQUIRE
+  LOCK_HEARTBEAT
+  LOCK_RELEASE
+  LOCK_FORCE
+}
+
+enum ResourceType {
+  USER
+  ROLE
+  ORGANIZATION
+  FEATURE
+  ORGANIZATION_ROLE
+  ORGANIZATION_MEMBER
+  USER_ROLE
+  ROLE_PERMISSION
+  LOCK
+  AUDIT_LOG
+  COURT
+  BOOKING
+}
+
+enum CourtType {
+  INDOOR
+  OUTDOOR
+  ROOFTOP
+  COVERED
+}
+
+enum CourtStatus {
+  AVAILABLE
+  MAINTENANCE
+  OCCUPIED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+// ── Core RBAC ──────────────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  passwordHash String
+  displayName  String?
+  email        String?
+  status       UserStatus @default(ACTIVE)
+  isSystem     Boolean    @default(false)
+
+  deletedAt DateTime? @db.Timestamptz
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  userRoles           UserRole[]
+  organizationMembers OrganizationMember[]
+  refreshTokens       RefreshToken[]
+  recordLocks         RecordLock[]
+  auditLogs           AuditLog[]           @relation("AuditActor")
+  bookings            Booking[]
+
+  @@index([deletedAt])
+  @@index([status])
+}
+
+model Role {
+  id       String     @id @default(cuid())
+  name     String     @unique
+  code     String?    @unique
+  isSystem Boolean    @default(false)
+  status   RoleStatus @default(ACTIVE)
+
+  deletedAt DateTime? @db.Timestamptz
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  userRoles         UserRole[]
+  rolePermissions   RolePermission[]
+  organizationRoles OrganizationRole[]
+
+  @@index([deletedAt])
+  @@index([status])
+}
+
+model Permission {
+  id        String @id @default(cuid())
+  code      String @unique // 9 chars: AM/AD/ED/DD + 7-digit sequence
+  action    String // MENU | ADD | EDIT | DELETE (kept as String for FK-less flexibility; validated via Zod)
+  featureId String
+
+  feature MenuFeature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  rolePermissions RolePermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([featureId])
+}
+
+model MenuFeature {
+  id                String        @id @default(cuid())
+  name              String
+  route             String
+  icon              String?
+  sortOrder         Int           @default(0)
+  parentId          String?
+  parent            MenuFeature?  @relation("FeatureParent", fields: [parentId], references: [id], onDelete: SetNull)
+  children          MenuFeature[] @relation("FeatureParent")
+  status            FeatureStatus @default(ACTIVE)
+  isSystem          Boolean       @default(false)
+  recordLockEnabled Boolean       @default(true)
+
+  deletedAt DateTime? @db.Timestamptz
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  permissions Permission[]
+
+  @@index([deletedAt])
+  @@index([status])
+  @@index([parentId])
+  @@index([sortOrder])
+}
+
+// ── Assignments ────────────────────────────────────────────────────────────
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+model RolePermission {
+  id           String   @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+model Organization {
+  id     String             @id @default(cuid())
+  name   String
+  code   String             @unique
+  status OrganizationStatus @default(ACTIVE)
+
+  deletedAt DateTime? @db.Timestamptz
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  organizationRoles   OrganizationRole[]
+  organizationMembers OrganizationMember[]
+
+  @@index([deletedAt])
+  @@index([status])
+}
+
+model OrganizationRole {
+  id             String   @id @default(cuid())
+  organizationId String
+  roleId         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role         Role         @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, roleId])
+  @@index([organizationId])
+  @@index([roleId])
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+// ── Auth tokens ────────────────────────────────────────────────────────────
+
+model RefreshToken {
+  id                String    @id @default(cuid())
+  userId            String
+  tokenHash         String    @unique
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  replacedByTokenId String?   @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ── Rate limiting ──────────────────────────────────────────────────────────
+
+model RateLimitEntry {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  count       Int      @default(1)
+  windowStart DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([windowStart])
+}
+
+// ── Sequence & settings ────────────────────────────────────────────────────
+
+model PermissionSequence {
+  id      Int @id @default(1)
+  nextVal Int @default(1)
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Domain Padel ─────────────────────────────────────────────────────────
+
+model Court {
+  id                String      @id @default(cuid())
+  code              String      @unique
+  name              String
+  location          String
+  type              CourtType
+  surface           String
+  pricePerHour      Int // IDR, integer
+  rating            Float       @default(0)
+  reviews           Int         @default(0)
+  badge             String? // Premium / Pro Size / Rooftop / null
+  amenities         String[]    @default([])
+  image             String // Unsplash URL
+  status            CourtStatus @default(AVAILABLE)
+  sortOrder         Int         @default(0)
+  recordLockEnabled Boolean     @default(true)
+
+  deletedAt DateTime? @db.Timestamptz
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  bookings Booking[]
+
+  @@index([deletedAt])
+  @@index([status])
+  @@index([sortOrder])
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  code          String        @unique // BK-YYYYMMDD-XXXX
+  userId        String
+  courtId       String
+  date          DateTime      @db.Date
+  start         String // HH:mm
+  end           String // HH:mm
+  duration      Int // 60 | 90 | 120
+  courtFee      Int
+  processingFee Int           @default(15000)
+  total         Int
+  status        BookingStatus @default(CONFIRMED)
+  paymentMethod String? // mock: TRANSFER/CASH/QRIS
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  court Court @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courtId, date])
+  @@index([userId])
+  @@index([status])
+  @@index([date])
+}
+
+// ── Record locking ─────────────────────────────────────────────────────────
+
+model RecordLock {
+  id            String       @id @default(cuid())
+  resourceType  ResourceType
+  resourceId    String
+  lockTokenHash String
+  ownerUserId   String
+  acquiredAt    DateTime     @default(now())
+  heartbeatAt   DateTime     @default(now())
+  expiresAt     DateTime
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  ownerUser User @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceType, resourceId])
+  @@index([ownerUserId])
+  @@index([expiresAt])
+}
+
+// ── Audit log ──────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  createdAt      DateTime     @default(now())
+  actorUserId    String?
+  actorUsername  String?
+  authMethod     AuthMethod
+  ip             String?
+  userAgent      String?
+  requestId      String?
+  action         AuditAction
+  resourceType   ResourceType
+  resourceId     String?
+  resourceIds    String[]     @default([])
+  permissionCode String?
+  before         Json?
+  after          Json?
+  status         String // SUCCESS | FAILED
+  errorCode      String?
+
+  actorUser User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorUserId])
+  @@index([resourceType, resourceId])
+  @@index([authMethod])
+  @@index([action])
+}

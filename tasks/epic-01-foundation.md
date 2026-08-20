@@ -63,7 +63,7 @@ Implementasi `lib/env.ts` dengan Zod fail-fast sebelum Prisma init.
 
 - **Estimasi:** M (1–2 hari)
 - **Dep:** T02
-- **Status:** TODO
+- **Status:** DONE
 
 ### Deskripsi
 
@@ -71,14 +71,14 @@ Setup Prisma + PostgreSQL + semua model inti dari spec.
 
 ### Checklist
 
-- [ ] `prisma/schema.prisma` — datasource `postgresql`, generator `prisma-client-js`
-- [ ] Models: `User`, `Role`, `Permission`, `MenuFeature`, `UserRole`, `RolePermission`, `Organization`, `OrganizationRole`, `OrganizationMember`, `RefreshToken`, `RateLimitEntry`, `PermissionSequence`, `SystemSetting`, `RecordLock`, `AuditLog`
-- [ ] Enums: `UserStatus`, `RoleStatus`, `OrganizationStatus`, `FeatureStatus`, `AuthMethod`, `AuditAction`, `ResourceType` (9 values spec)
-- [ ] Soft-delete: `deletedAt DateTime?` + `@@index([deletedAt])` pada User/Role/Organization/MenuFeature
-- [ ] `Permission.code` `@@unique([code])` (9 chars)
-- [ ] `RecordLock @@unique([resourceType, resourceId])`
-- [ ] `lib/prisma.ts` singleton
-- [ ] `prisma migrate dev` + `prisma generate` verified
+- [x] `prisma/schema.prisma` — datasource `postgresql`, generator `prisma-client-js`
+- [x] Models: `User`, `Role`, `Permission`, `MenuFeature`, `UserRole`, `RolePermission`, `Organization`, `OrganizationRole`, `OrganizationMember`, `RefreshToken`, `RateLimitEntry`, `PermissionSequence`, `SystemSetting`, `RecordLock`, `AuditLog`
+- [x] Enums: `UserStatus`, `RoleStatus`, `OrganizationStatus`, `FeatureStatus`, `AuthMethod`, `AuditAction`, `ResourceType` (9 values spec)
+- [x] Soft-delete: `deletedAt DateTime?` + `@@index([deletedAt])` pada User/Role/Organization/MenuFeature
+- [x] `Permission.code` `@@unique([code])` (9 chars)
+- [x] `RecordLock @@unique([resourceType, resourceId])`
+- [x] `lib/prisma.ts` singleton
+- [x] `prisma migrate dev` + `prisma generate` — perlu `! npm install` dulu (auto mode block), lalu `! npx prisma migrate dev --name init` & `! npx prisma generate`
 
 ### Acceptance Criteria
 
@@ -91,7 +91,7 @@ Setup Prisma + PostgreSQL + semua model inti dari spec.
 
 - **Estimasi:** M
 - **Dep:** T03
-- **Status:** TODO
+- **Status:** DONE — verified 2026-08-20 (`npx prisma migrate dev --name init` + `generate` + `db seed` 2x idempoten OK; 28 permissions, nextVal=8)
 
 ### Deskripsi
 
@@ -99,13 +99,13 @@ Seed data awal yang idempoten (upsert, re-run aman).
 
 ### Checklist
 
-- [ ] `prisma/seed.ts` — upsert `PermissionSequence` (singleton nextVal)
-- [ ] Seed 3 roles: `SUPER_ADMIN`, `ADMIN`, `USER` (SUPER_ADMIN protected)
-- [ ] Seed superadmin user (`superadmin/superadmin` Argon2id hash, dev only)
-- [ ] Seed 7 MenuFeature: Users 0000001, Roles 0000002, Organizations 0000003, Features 0000004, Locked Records 0000005, External API Demo 0000006, Audit Logs 0000007 — tiap feature generate 4 permission via sequence
-- [ ] Assign semua permission ke SUPER_ADMIN
-- [ ] `SystemSetting` (recordLockEnabled, dll)
-- [ ] Verifikasi idempotency: `npx prisma db seed` 2x tidak duplikat
+- [x] `prisma/seed.ts` — upsert `PermissionSequence` (singleton nextVal)
+- [x] Seed 3 roles: `SUPER_ADMIN`, `ADMIN`, `USER` (SUPER_ADMIN protected)
+- [x] Seed superadmin user (`superadmin/superadmin` Argon2id hash, dev only)
+- [x] Seed 7 MenuFeature: Users 0000001, Roles 0000002, Organizations 0000003, Features 0000004, Locked Records 0000005, External API Demo 0000006, Audit Logs 0000007 — tiap feature generate 4 permission via sequence
+- [x] Assign semua permission ke SUPER_ADMIN
+- [x] `SystemSetting` (recordLockEnabled, dll)
+- [x] Verifikasi idempotency: `npx prisma db seed` 2x tidak duplikat
 
 ### Acceptance Criteria
 

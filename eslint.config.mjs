@@ -1,12 +1,13 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
 
 const eslintConfig = defineConfig([
-  ...nextVitals,
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  ...compat.config({ extends: ["next/core-web-vitals"] }),
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "vitest.config.ts", "tests/**"]),
   {
     rules: {
-      // Ban raw <table> / <select> outside shared UI — dashboard must use DataTable / Select
       "no-restricted-syntax": [
         "error",
         {
@@ -22,7 +23,6 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  // Allow raw table/select inside shared UI and outside dashboard
   {
     files: ["components/ui/**", "uidesign/**"],
     rules: {

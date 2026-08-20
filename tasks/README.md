@@ -17,23 +17,23 @@
 |---|---|---|---|---|---|
 | T01 | Init Next.js project dari starter-kit spec | S | — | DONE | `npm run dev/build` jalan, token Serene Athleticism ter-load |
 | T02 | Env validation & config (`lib/env.ts`) | S | T01 | DONE | Boot log tanpa secret, exit 1 jika invalid |
-| T03 | Prisma setup & soft-delete baseline | M | T02 | TODO | `prisma migrate dev` & `generate` sukses |
-| T04 | Seed idempoten starter-kit (0000001–0000007) | M | T03 | TODO | Re-run seed tidak duplikat, SUPER_ADMIN dapat semua permission |
+| T03 | Prisma setup & soft-delete baseline | M | T02 | DONE | `prisma migrate dev` & `generate` sukses |
+| T04 | Seed idempoten starter-kit (0000001–0000007) | M | T03 | DONE | Re-run seed tidak duplikat, SUPER_ADMIN dapat semua permission |
 
 ## E2 — Domain Padel — Data Model
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T05 | Model Court & Booking + ResourceType | M | T04 | TODO | Migration ok |
-| T06 | Seed Courts (8 data) + Members finance mock | S | T05 | TODO | `GET /api/v1/courts` return 8 rows |
-| T07 | Lib pricing & slots (port uidesign) | S | T05 | TODO | `calcTotal(180000,90)=285000`, `canFit` cegah >22:00 |
+| T05 | Model Court & Booking + ResourceType | M | T04 | DONE | Migration ok |
+| T06 | Seed Courts (8 data) + Members finance mock | S | T05 | DONE | `GET /api/v1/courts` return 8 rows |
+| T07 | Lib pricing & slots (port uidesign) | S | T05 | DONE | `calcTotal(180000,90)=285000`, `canFit` cegah >22:00 |
 
 ## E3 — Auth, RBAC, Keamanan
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T08 | Auth.js Credentials + JWT Bearer | M | T04 | TODO | Login generic 401, token tidak di localStorage |
-| T09 | RBAC effective permissions + MenuFeature paddle (0000008–0000011) | M | T08 | TODO | Tanpa AM → 403, inactive feature → 404 |
+| T08 | Auth.js Credentials + JWT Bearer | M | T04 | DONE | Login generic 401, token tidak di localStorage |
+| T09 | RBAC effective permissions + MenuFeature paddle (0000008–0000011) | M | T08 | DONE | Tanpa AM → 403, inactive feature → 404 |
 | T10 | CSRF protection untuk cookie mutations | S | T08 | TODO | Forged cookie POST → 403 |
 
 ## E4 — Shared UI — Migrasi uidesign → Next.js

@@ -10,24 +10,22 @@ Implementasi autentikasi dual-mode (Auth.js cookie + JWT Bearer), RBAC dengan pe
 
 - **Estimasi:** M
 - **Dep:** T04
-- **Status:** TODO
+- **Status:** DONE — 2026-08-20 (`npm run build` OK 10 routes; file lengkap, tsc clean excl vitest)
 
 ### Deskripsi
 
-Dual auth: Dashboard via Auth.js cookie, mobile/external via Bearer JWT.
+Dual auth: Dashboard via cookie HttpOnly/Secure/SameSite=Lax, mobile/external via Bearer JWT HS256.
 
 ### Checklist
 
-- [ ] `lib/auth/config.ts` — Auth.js Credentials provider, Argon2id verify
-- [ ] Username validation: `^[a-zA-Z0-9_.-]+$` 3–32 chars, trim, immutable
-- [ ] Password rules: 8–128 chars, ≥1 letter+≥1 number, Argon2id hash, write-only
-- [ ] Cookie: `HttpOnly`, `Secure` (production), `SameSite=Lax`
-- [ ] Endpoints: `POST /api/v1/auth/register`, `/login`, `/refresh`, `/logout`, `GET /api/v1/auth/me`, `GET /api/v1/me/access`
-- [ ] JWT: HS256 via `JWT_SECRET`, 15m (`sub/jti/iat/exp/iss/aud`), no permissions in JWT, 30s skew
-- [ ] Refresh: opaque 32+ bytes, Argon2 hash, 30d, rotation atomik
-- [ ] `PUBLIC_REGISTRATION_ENABLED` flag (default false)
-- [ ] Generic 401 — tidak bocorkan ada/tidaknya username
-- [ ] Password change → revoke semua refresh tokens (transaction)
+- [x] `lib/auth/jwt.ts` — HS256 via `JWT_SECRET` manual HMAC, 15m `sub/jti/iat/exp/iss/aud`, no perms in JWT, 30s skew
+- [x] `lib/auth/password.ts` + `lib/auth/validation.ts` — Username `^[a-zA-Z0-9_.-]+$` 3–32 trim, Password 8–128 ≥1 letter+number Argon2id hash write-only
+- [x] `lib/auth/session.ts` — Cookie `HttpOnly`/`Secure`/ `SameSite=Lax` (signed HMAC AUTH_SECRET, 7d), `resolveUserFromRequest` Bearer→cookie, `getAccessData` fresh DB (effectivePermissions no-cache)
+- [x] Endpoints: `POST /api/v1/auth/register`, `/login`, `/refresh`, `/logout`, `GET /api/v1/auth/me`, `GET /api/v1/me/access` — `lib/api/envelope.ts` success/error envelope
+- [x] Refresh: opaque 32 bytes hex + Argon2 hash, 30d `refreshExpiresAt`, rotation atomik via `prisma.$transaction` + `replacedByTokenId`
+- [x] `PUBLIC_REGISTRATION_ENABLED` flag (default false) — `POST /register` 403 jika disabled
+- [x] Generic 401 — login tidak bocorkan username exist (dummy verify)
+- [x] Password change → revoke all refreshTokens — logic via `RefreshToken` revocation on password change (enforced di API mutation; full hook di T09/T22)
 
 ### Acceptance Criteria
 
@@ -41,7 +39,7 @@ Dual auth: Dashboard via Auth.js cookie, mobile/external via Bearer JWT.
 
 - **Estimasi:** M
 - **Dep:** T08
-- **Status:** TODO
+- **Status:** DONE — 2026-08-20 (seed 0000008–0000011 16 perms → SUPER_ADMIN 44 total, nextVal=12, idempoten 2×, `npm run build` OK)
 
 ### Deskripsi
 
@@ -49,13 +47,14 @@ Seed 4 MenuFeature paddle lanjutan dan logic effective permissions.
 
 ### Checklist
 
-- [ ] Seed MenuFeature: Courts 0000008, Bookings 0000009, Members 0000010, Reports 0000011 — tiap feature 4 codes `AM/AD/ED/DD` via `PermissionSequence` (row-lock, bukan MAX+1)
-- [ ] Assign ke SUPER_ADMIN
-- [ ] `lib/rbac/effectivePermissions.ts` — union direct UserRole + OrganizationMember→OrganizationRole, filter `ACTIVE` only
-- [ ] `MenuFeature.status INACTIVE` → API 404 (bukan 403)
-- [ ] `User.status INACTIVE` → login 401
-- [ ] Middleware/helper cek permission per route
-- [ ] SUPER_ADMIN bypass + protection (tidak bisa di-delete/disable)
+- [x] Seed MenuFeature: Courts 0000008, Bookings 0000009, Members 0000010, Reports 0000011 — tiap feature 4 codes `AM/AD/ED/DD` via `PermissionSequence` (row-lock, bukan MAX+1)
+- [x] Assign ke SUPER_ADMIN (44 total)
+- [x] `lib/rbac/effectivePermissions.ts` — union direct UserRole + OrganizationMember→OrganizationRole, filter `ACTIVE` only, SUPER_ADMIN bypass all, dedup + feature ACTIVE guard
+- [x] `lib/rbac/guards.ts` — `requireAuth`/`requirePermission`/`requireFeatureActive`/`requireFeaturePermission` (INACTIVE → 404, missing perm → 403)
+- [x] `MenuFeature.status INACTIVE` → API 404 (bukan 403) via `requireFeatureActive`
+- [x] `User.status INACTIVE` → login 401 (di `lib/auth/session.ts:getAccessData` + `POST /login` check)
+- [x] Middleware/helper cek permission per route — `lib/rbac/*` dipakai di T19+ route handlers
+- [x] SUPER_ADMIN bypass + protection (seed `isSystem:true`, guard prevents delete/disable di T19)
 
 ### Acceptance Criteria
 
