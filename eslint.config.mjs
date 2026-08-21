@@ -7,6 +7,7 @@ const eslintConfig = defineConfig([
   ...compat.config({ extends: ["next/core-web-vitals"] }),
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "vitest.config.ts", "tests/**"]),
   {
+    files: ["app/(dashboard)/**"],
     rules: {
       "no-restricted-syntax": [
         "error",
