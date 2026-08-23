@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useLogout } from "@/hooks/useLogout";
 
 export type NavbarProps = {
   active?: "courts" | "dashboard" | "admin" | "";
@@ -30,8 +31,10 @@ function NavLink({
   );
 }
 
-export default function Navbar({ active = "", isAuthed = false, userName, onSignOut }: NavbarProps) {
+export default function Navbar({ active = "", isAuthed = false, userName, onSignOut: onSignOutProp }: NavbarProps) {
   const [open, setOpen] = useState(false);
+  const fallbackLogout = useLogout();
+  const onSignOut = onSignOutProp ?? fallbackLogout;
 
   return (
     <nav className="sticky top-0 z-40 glass border-b border-outline-variant/30">

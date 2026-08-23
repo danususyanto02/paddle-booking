@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { FeaturedSkeleton } from "@/components/ui/skeleton";
@@ -47,9 +48,9 @@ export default function HomePage() {
               <h2 className="font-headline-lg text-on-surface">Featured Courts</h2>
               <p className="text-sm text-secondary max-w-md mt-1">Top-rated venues ready for your next match. Handpicked for quality and performance.</p>
             </div>
-            <a href="/courts" className="text-sm font-semibold text-primary inline-flex items-center gap-1 hover:underline">
+            <Link href="/courts" className="text-sm font-semibold text-primary inline-flex items-center gap-1 hover:underline">
               View All Courts <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-            </a>
+            </Link>
           </div>
 
           <Suspense fallback={<div aria-busy="true"><FeaturedSkeleton /></div>}>

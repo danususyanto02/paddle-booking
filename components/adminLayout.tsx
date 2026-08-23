@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useLogout } from "@/hooks/useLogout";
 
 export type AdminLayoutProps = {
   active?: "dashboard" | "courts" | "members" | "bookings" | "reports" | "";
@@ -28,8 +29,10 @@ function Item({
   );
 }
 
-export default function AdminLayout({ active = "dashboard", children, onSignOut }: AdminLayoutProps) {
+export default function AdminLayout({ active = "dashboard", children, onSignOut: onSignOutProp }: AdminLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const fallbackLogout = useLogout();
+  const onSignOut = onSignOutProp ?? fallbackLogout;
 
   return (
     <>
