@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+import { useToast } from "@/components/ui/toaster";
 
 type ApiErr = { error?: { code?: string; message?: string; details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] } | unknown } };
 
 export default function RegisterPage() {
   const router = useRouter();
+  const toast = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -48,7 +50,8 @@ export default function RegisterPage() {
         setErr(j.error?.message ?? `Registration failed (${res.status})`);
         return;
       }
-      router.push("/login");
+      toast("Account created — you can now sign in", "success");
+      router.push("/login?registered=1");
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : "Registration failed");
     } finally { setLoading(false); }

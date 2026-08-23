@@ -1,17 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useToast } from "@/components/ui/toaster";
 
 export default function LoginInner() {
   const router = useRouter();
   const sp = useSearchParams();
+  const toast = useToast();
   const next = sp.get("next") ?? "";
+  const registered = sp.get("registered") === "1";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (registered) toast("Account created — please sign in", "success");
+  }, [registered, toast]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +28,7 @@ export default function LoginInner() {
       const res = await fetch("/api/v1/auth/login", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
       const j = await res.json().catch(() => ({})) as { error?: { message?: string } };
       if (!res.ok) { setErr(j.error?.message ?? "Invalid credentials"); return; }
+      toast(`Welcome, ${username}!`, "success");
       router.push(next || "/dashboard");
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : "Login failed");
