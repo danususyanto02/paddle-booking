@@ -241,7 +241,7 @@ async function seedCourts() {
     { code: "velocity", name: "Velocity Arena", location: "Kinetic Westside", type: "INDOOR" as const, surface: "Textured Acrylic", pricePerHour: 160000, rating: 4.8, reviews: 92, amenities: ["Cafe","Showers"], image: U("photo-1542144582-1ba00456b5e3", 1200), status: "AVAILABLE" as const, badge: null, sortOrder: 50 },
     { code: "skyline", name: "Skyline Courts", location: "Skyline Rooftop", type: "ROOFTOP" as const, surface: "Panoramic Outdoor", pricePerHour: 200000, rating: 4.9, reviews: 178, amenities: ["Cafe","Parking"], image: U("photo-1574629810360-214f3774381b", 1200), status: "AVAILABLE" as const, badge: "Rooftop", sortOrder: 60 },
     { code: "beta", name: "Court Beta", location: "Kinetic Downtown Hub", type: "INDOOR" as const, surface: "Artificial Turf", pricePerHour: 150000, rating: 4.7, reviews: 64, amenities: ["Showers","Parking"], image: U("photo-1593766787871-bb0d53b5a0f1", 1200), status: "OCCUPIED" as const, badge: null, sortOrder: 70 },
-    { code: "gamma", name: "Court Gamma", location: "Kinetic Westside", type: "COVERED" as const, surface: "Semi-Indoor Turf", pricePerHour: 135000, rating: 4.6, reviews: 41, amenities: ["Cafe"], image: U("photo-1551698618-1dfe5d97d256", 1200), status: "AVAILABLE" as const, badge: null, sortOrder: 80 },
+    { code: "gamma", name: "Court Gamma", location: "Kinetic Westside", type: "COVERED" as const, surface: "Semi-Indoor Turf", pricePerHour: 135000, rating: 4.6, reviews: 41, amenities: ["Cafe"], image: U("photo-1518611012118-696072aa579a", 1200), status: "AVAILABLE" as const, badge: null, sortOrder: 80 },
   ];
   for (const c of courts) {
     await prisma.court.upsert({

@@ -34,70 +34,70 @@
 |---|---|---|---|---|---|
 | T08 | Auth.js Credentials + JWT Bearer | M | T04 | DONE | Login generic 401, token tidak di localStorage |
 | T09 | RBAC effective permissions + MenuFeature paddle (0000008–0000011) | M | T08 | DONE | Tanpa AM → 403, inactive feature → 404 |
-| T10 | CSRF protection untuk cookie mutations | S | T08 | TODO | Forged cookie POST → 403 |
+| T10 | CSRF protection untuk cookie mutations | S | T08 | DONE | Forged cookie POST → 403 |
 
 ## E4 — Shared UI — Migrasi uidesign → Next.js
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T11 | Globals & layout shell | S | T01 | TODO | Visual 1:1 uidesign |
-| T12 | Skeleton primitives | S | T11 | TODO | Semua loading pakai Skeleton, no spinner |
-| T13 | DataTable (wajib) | M | T12 | TODO | `page` out-of-range → `data:[]` |
-| T14 | Select (wajib, Select2-style) | M | T12 | TODO | Semua filter pakai Select |
-| T15 | Button/CodeAccess & Access | S | T09 | TODO | Tanpa permission tombol tidak render |
+| T11 | Globals & layout shell | S | T01 | DONE | Visual 1:1 uidesign |
+| T12 | Skeleton primitives | S | T11 | DONE | Semua loading pakai Skeleton, no spinner |
+| T13 | DataTable (wajib) | M | T12 | DONE | `page` out-of-range → `data:[]` |
+| T14 | Select (wajib, Select2-style) | M | T12 | DONE | Semua filter pakai Select |
+| T15 | Button/CodeAccess & Access | S | T09 | DONE | Tanpa permission tombol tidak render |
 
 ## E5 — Public Flow
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T16 | Landing `/(public)/page.tsx` | M | T11,T12 | TODO | Search → `/courts?q=` |
-| T17 | Courts listing `/(public)/courts` | M | T13,T14 | TODO | Filter & pagination preserve |
-| T18 | Court Detail `/(public)/courts/[id]` | S | T17 | TODO | Soft-deleted → 404 |
-| T19 | API Courts CRUD (admin) | M | T05,T09 | TODO | Bulk delete partial success |
+| T16 | Landing `/(public)/page.tsx` | M | T11,T12 | DONE | Search → `/courts?q=` |
+| T17 | Courts listing `/(public)/courts` | M | T13,T14 | DONE | Filter & pagination preserve |
+| T18 | Court Detail `/(public)/courts/[id]` | S | T17 | DONE | Soft-deleted → 404 |
+| T19 | API Courts CRUD (admin) | M | T05,T09 | DONE | Bulk delete partial success |
 
 ## E6 — Booking Engine (Mock Payment)
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T20 | Slot availability API | M | T07,T19 | TODO | Conflict → occupied |
-| T21 | Booking page `/(public)/booking` | M | T20,T07 | TODO | Total live IDR, occupied disabled |
-| T22 | Checkout + Success (Mock) | M | T21 | TODO | Race → 409, success tampil BK-* |
-| T23 | User Dashboard `/(public)/dashboard` | M | T22 | TODO | Cancel → slot free |
+| T20 | Slot availability API | M | T07,T19 | DONE | Conflict → occupied |
+| T21 | Booking page `/(public)/booking` | M | T20,T07 | DONE | Total live IDR, occupied disabled |
+| T22 | Checkout + Success (Mock) | M | T21 | DONE | Race → 409, success tampil BK-* |
+| T23 | User Dashboard `/(public)/dashboard` | M | T22 | DONE | Cancel → slot free |
 
 ## E7 — Admin
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T24 | Admin Dashboard `/dashboard` | S | T19,T22 | TODO | Stats dari API |
-| T25 | Admin Courts `/dashboard/courts` | S | T19 | TODO | Tanpa lock token → 423 |
-| T26 | Admin Bookings `/dashboard/bookings` | S | T22 | TODO | Filter status & date |
-| T27 | Admin Members `/dashboard/members` | S | T13 | TODO | CSV export |
-| T28 | Admin Reports `/dashboard/reports` | S | T27 | TODO | growthPct & totalRevenue sesuai mock |
+| T24 | Admin Dashboard `/dashboard` | S | T19,T22 | DONE | Stats dari API |
+| T25 | Admin Courts `/dashboard/courts` | S | T19 | DONE | Tanpa lock token → 423 |
+| T26 | Admin Bookings `/dashboard/bookings` | S | T22 | DONE | Filter status & date |
+| T27 | Admin Members `/dashboard/members` | S | T13 | DONE | CSV export |
+| T28 | Admin Reports `/dashboard/reports` | S | T27 | DONE | growthPct & totalRevenue sesuai mock |
 
 ## E8 — Cross-Cutting
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T29 | Rate limiting (PostgreSQL) | S | T03 | TODO | 6th login → 429 |
-| T30 | Record locking full | M | T03 | TODO | 2 tab → second read-only |
-| T31 | Audit log | S | T30 | TODO | Bulk delete 1 row + per-id outcome |
-| T32 | OpenAPI & Swagger | S | T19,T22 | TODO | Semua route terdokumentasi |
+| T29 | Rate limiting (PostgreSQL) | S | T03 | DONE | 6th login → 429 |
+| T30 | Record locking full | M | T03 | DONE | 2 tab → second read-only |
+| T31 | Audit log | S | T30 | DONE | Bulk delete 1 row + per-id outcome |
+| T32 | OpenAPI & Swagger | S | T19,T22 | DONE | Semua route terdokumentasi |
 
 ## E9 — Auth Pages & Polish
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T33 | Login/Register/404 pages | S | T08 | TODO | Register flag respected |
-| T34 | Lazy loading & images | S | T12 | TODO | No spinner di fallback |
+| T33 | Login/Register/404 pages | S | T08 | DONE | Register flag respected |
+| T34 | Lazy loading & images | S | T12 | DONE | No spinner di fallback |
 
 ## E10 — Docker, Health, Tests, Docs
 
 | # | Task | Est | Dep | Status | AC |
 |---|---|---|---|---|---|
-| T35 | Docker multi-stage | S | T01 | TODO | `docker build` sukses |
-| T36 | Entrypoint & health | S | T35 | TODO | `HEALTHCHECK` grep ok |
-| T37 | Unit tests (Vitest) | M | T07,T09,T30 | TODO | `npm run test` hijau |
-| T38 | Docs & handover | S | T37 | TODO | Docs lengkap |
+| T35 | Docker multi-stage | S | T01 | DONE | `docker build` sukses |
+| T36 | Entrypoint & health | S | T35 | DONE | `HEALTHCHECK` grep ok |
+| T37 | Unit tests (Vitest) | M | T07,T09,T30 | DONE | `npm run test` hijau |
+| T38 | Docs & handover | S | T37 | DONE | Docs lengkap |
 
 ---
 

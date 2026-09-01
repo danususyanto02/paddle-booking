@@ -3,6 +3,7 @@ import { loginBodySchema } from "@/lib/auth/validation";
 import { verifyPassword } from "@/lib/auth/password";
 import { signAccessToken, generateRefreshToken, refreshExpiresAt } from "@/lib/auth/jwt";
 import { signSession, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/lib/auth/session";
+import { CSRF_COOKIE_NAME, generateCsrfToken } from "@/lib/api/auth-helpers";
 import { error, success } from "@/lib/api/envelope";
 import * as argon2 from "argon2";
 import { cookies } from "next/headers";
@@ -17,11 +18,8 @@ export async function POST(req: Request) {
 
   const { username, password } = parsed.data;
 
-  // Find user (include deleted check; case-sensitive)
   const user = await prisma.user.findFirst({ where: { username, deletedAt: null } });
-  // Generic 401 — do not reveal existence. Use dummy verify to keep timing similar.
   if (!user) {
-    // Dummy argon2 verify to mitigate timing side-channel (best-effort)
     await verifyPassword("$argon2id$v=19$m=65536,t=3,p=4$dummy$dummyhash", password).catch(() => {});
     return error("UNAUTHENTICATED", GENERIC, { status: 401 });
   }
@@ -30,7 +28,6 @@ export async function POST(req: Request) {
   const ok = await verifyPassword(user.passwordHash, password);
   if (!ok) return error("UNAUTHENTICATED", GENERIC, { status: 401 });
 
-  // Issue tokens
   const { token: accessToken, exp } = signAccessToken(user.id, user.username);
   const rawRefresh = generateRefreshToken();
   const refreshHash = await argon2.hash(rawRefresh, { type: argon2.argon2id });
@@ -40,10 +37,18 @@ export async function POST(req: Request) {
     data: { userId: user.id, tokenHash: refreshHash, expiresAt },
   });
 
-  // Set cookie for dashboard (HttpOnly, Secure in prod, SameSite=Lax)
   const cookieValue = signSession(user.id);
+  const csrfToken = generateCsrfToken();
   const jar = await cookies();
   jar.set(SESSION_COOKIE_NAME, cookieValue, sessionCookieOptions() as never);
+  const isProd = process.env.NODE_ENV === "production";
+  jar.set(CSRF_COOKIE_NAME, csrfToken, {
+    httpOnly: false,
+    secure: isProd,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  } as never);
 
   return success({
     accessToken,
@@ -51,5 +56,6 @@ export async function POST(req: Request) {
     tokenType: "Bearer",
     expiresIn: 900,
     expiresAt: new Date(exp * 1000).toISOString(),
+    csrfToken,
   });
 }

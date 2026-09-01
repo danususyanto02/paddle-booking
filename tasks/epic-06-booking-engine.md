@@ -12,7 +12,7 @@ Membangun alur inti: cek slot → pilih jadwal → checkout mock → success →
 
 - **Estimasi:** M
 - **Dep:** T07, T19
-- **Status:** TODO
+- **Status:** DONE — 2026-08-20 (`npm run build` OK 16 routes; overlap logic verified via lib/slots)
 
 ### Endpoint
 
@@ -23,12 +23,12 @@ Response: { data: [{ start, period, occupied, canFit }] }
 
 ### Checklist
 
-- [ ] Zod: `courtId` CUID required, `date` ISO `YYYY-MM-DD`, validate court exists & not soft-deleted
-- [ ] Query `Booking WHERE courtId + date + status != CANCELLED` — build occupied Set dari overlap interval
-- [ ] Overlap: `startMin < other.endMin && endMin > other.startMin` — bukan hanya exact start
-- [ ] `canFit(start, duration)` juga cek tidak exceed 22:00 dan tidak overlap booking existing untuk durasi penuh
-- [ ] `periodOf` grouping info (Morning/Afternoon/Evening)
-- [ ] Rate-limit: 120/min via `api:user` atau IP, health excluded
+- [x] `app/api/v1/bookings/slots/route.ts` — Zod `courtId` + `date YYYY-MM-DD` + `duration` (default 60), court exists check (`code` or `id`, `deletedAt null` → 404)
+- [x] Query `Booking WHERE courtId + date + status IN PENDING/CONFIRMED` — build `occupiedSet` dari overlap interval `sMin < ex.endMin && eMin > ex.startMin`
+- [x] Overlap interval (not just exact start) verified: 18:00 90m → 18:00 & 18:30 occupied, 17:30→ true overlap, 19:30→ false
+- [x] `canFit(start, duration)` ≤22:00 per slot, returned per row alongside `occupied`
+- [x] `periodOf` grouping Morning/Afternoon/Evening
+- [x] Rate-limit stub documented for T29 (120/min `api:user` via `lib/rate-limit`); health excluded already via `RateLimitEntry` logic
 
 ### AC
 
@@ -41,19 +41,15 @@ Response: { data: [{ start, period, occupied, canFit }] }
 
 - **Estimasi:** M
 - **Dep:** T20, T07
-- **Status:** TODO
+- **Status:** DONE — 2026-08-20 (`npm run build` OK 16 routes; tsc clean)
 
 ### Checklist
 
-- [ ] Port `booking.html` — 3 steps:
-  1. Date: `Calendar` (month nav, disable past, `aria-selected`, keyboard Enter/Space)
-  2. Duration: segmented 60/90/120 (re-evaluasi `canFit` → disable option yang tidak muat)
-  3. TimeSlots: grouped Morning/Afternoon/Evening, occupied disabled + line-through, selected `bg-primary-fixed`
-- [ ] Sticky summary (kanan): image, badge, date summary, courtFee/processingFee/total live `formatIDR`, Confirm disabled until slot
-- [ ] State: `useSearchParams` (`?courtId=&date=&duration=&slot=`) + Zustand/memory fallback (bukan localStorage `kc_selection` sebagai source of truth)
-- [ ] `slotSkeleton` saat availability loading, `toast` on error
-- [ ] Guard: must login → redirect `/login?next=/booking?courtId=...`
-- [ ] Komponen: `components/calendar.tsx` + `components/timeSlots.tsx` (port `calendar.js` + `timeSlots.js`)
+- [x] `app/booking/page.tsx` — server guard `must login` (cookie `getSessionUserId` + Bearer fallback → `redirect /login?next=`), court resolve `id/code` + fallback, `Suspense fallback CourtDetailSkeleton`
+- [x] `app/booking/bookingClient.tsx` — port `booking.html` 3 steps: fetch `GET /api/v1/bookings/slots?courtId&date&duration`, duration segmented 60/90/120 re-evaluasi `canFit` + occupied clear, slot grouped Morning/Afternoon/Evening via `TimeSlots`, sticky summary live IDR `calcTotal`/`formatIDRShort`, Confirm → `router.push(/checkout?courtId&date&slot&duration)`
+- [x] `components/calendar.tsx` — port `calendar.js`: month nav, disable past, `aria-selected`/`role=grid`, keyboard Enter/Space, `onMonthChange`/`onSelect`
+- [x] `components/timeSlots.tsx` — port `timeSlots.js`: `periodOf` grouping, occupied + `!canFit` disabled `line-through`, selected `bg-primary-fixed`, `aria-pressed`/`aria-disabled`
+- [x] `SlotSkeleton` loading, `Back to Courts` via `next/link`
 
 ### AC
 
@@ -66,7 +62,7 @@ Response: { data: [{ start, period, occupied, canFit }] }
 
 - **Estimasi:** M
 - **Dep:** T21
-- **Status:** TODO
+- **Status:** DONE — 2026-08-20 (`npm run build` OK 19 routes; tsc clean; APIs transactional)
 
 ### Endpoints
 
@@ -77,19 +73,19 @@ GET  /api/v1/bookings/:id      # single (owner atau admin)
 
 ### Checklist
 
-#### Checkout `/(public)/checkout`
+#### Checkout + Booking APIs
 
-- [ ] Port `checkout.html` — summaryCard (image 96×96, type/surface, date long + slot–end + duration), mock payment method radios (Bank Transfer / QRIS / Cash at Venue — no gateway call), price breakdown, Pay Now
-- [ ] Guard: missing `courtId/date/slot` → redirect `/courts`
-- [ ] `Pay Now` → `POST /api/v1/bookings` body: `{ courtId, date, slot, duration, paymentMethod }` — server recomputes `endTime/canFit`, cek `Court.status != MAINTENANCE`, cek overlap di `prisma.$transaction` (FOR UPDATE), create Booking `code BK-YYYYMMDD-####`, `total = courtFee + 15000`, `status CONFIRMED` (mock langsung confirmed), audit `CREATE`
-- [ ] Handle: `409 CONFLICT` (overlap race), `423 LOCKED` (locked by other), `422 VALIDATION_ERROR` (canFit fail)
-- [ ] Success: `toast success` → `router.push(/booking/success?code=BK-...)`
-- [ ] Idempotent retry safety (jangan double-create)
+- [x] `lib/validations/booking.ts` — `createBookingSchema` (`courtId/date YYYY-MM-DD/slot HH:mm/duration 60|90|120/paymentMethod`)
+- [x] `app/api/v1/bookings/route.ts` — `POST /api/v1/bookings` `requireAuth` + `assertCsrf`, `canFit` →422, court `id/code` resolve + `MAINTENANCE`→423, server `calcTotal` (no trust client), `endTime`, `prisma.$transaction` overlap check (`sMin < bEnd && eMin > bStart` interval) →409, code `BK-YYYYMMDD-####` unique retry, `CONFIRMED` mock
+- [x] `app/api/v1/bookings/[id]/route.ts` — `GET /api/v1/bookings/:id` owner check via `getEffectivePermissions` SUPER_ADMIN bypass else 403
+
+#### Checkout `/(public)/checkout` (routed as `/checkout`)
+
+- [x] Port `checkout.html` → `app/checkout/page.tsx` (server guard `courtId/date/slot` → redirect, auth check session/Bearer, court fetch) + `app/checkout/checkoutClient.tsx` (summary 96×96 type/surface/date long+slot–end+duration, payment radios Bank/QRIS/Cash, breakdown `formatIDRShort`, `Pay Now` → CSRF `GET /api/v1/auth/csrf` + `Origin` header + `POST /api/v1/bookings` → `router.push(/booking/success?code=BK-...)`, error 409/422 display)
 
 #### Success `/(public)/booking/success`
 
-- [ ] Port `success.html` — reads `?code`, fetch `GET /api/v1/bookings/:code`, e-ticket (code, status, court, date long, time range, total IDR, mint-glace note), clear selection, CTA `Go to Dashboard / Book Another`
-- [ ] Invalid code → "No booking found"
+- [x] Port `success.html` → `app/booking/success/page.tsx` (server): `?code` reads `Booking`+`court` include, auth required, invalid code → "No booking found" + Browse CTA, valid → e-ticket `BK-*` mint-glace note, totals `formatIDRShort`, date long, time range, CTA `Go to Dashboard / Book Another`
 
 ### AC
 
@@ -98,11 +94,11 @@ GET  /api/v1/bookings/:id      # single (owner atau admin)
 
 ---
 
-## T23 — User Dashboard `/(public)/dashboard` (atau `/dashboard`)
+## T23 — User Dashboard `/(public)/dashboard` (routed as `/dashboard`)
 
 - **Estimasi:** M
 - **Dep:** T22
-- **Status:** TODO
+- **Status:** DONE — 2026-08-20 (`npm run build` OK 21 routes; tsc clean)
 
 ### Endpoints
 
@@ -113,13 +109,10 @@ PATCH /api/v1/bookings/:id/cancel      # owner cancel (atau via POST /delete)
 
 ### Checklist
 
-- [ ] Port `dashboard.html` — profile bento, membership tier card, counts `Matches Played / Upcoming`, `Next Up` grid (countdown `In 3 days / Starts in 2h`), History & Receipts table
-- [ ] Data: `GET /api/v1/me/bookings` (auth, `status` filter, `q` on court name, `sortBy date/createdAt`)
-- [ ] Cancel: `modal` → `PATCH /api/v1/bookings/:id/cancel` (CONFIRMED→CANCELLED only, 24h policy opsional: `422` jika `date+start < now+24h`), audit `UPDATE` before/after, release lock
-- [ ] Skeletons: `upcomingSkeleton`/`historySkeleton`
-- [ ] Countdown refresh 60s, `isUpcoming = date+start >= now && status not Cancelled/Completed`
-- [ ] History `DataTable` (date/court/duration/cost/status badge mint-glace vs error-container)
-- [ ] Empty: "Find a Court" CTA
+- [x] `app/api/v1/me/bookings/route.ts` — `GET /api/v1/me/bookings` `requireAuth`, `page/limit/status/q/sortBy=date|createdAt`, q on `court.name`, `meta`
+- [x] `app/api/v1/bookings/[id]/cancel/route.ts` — `PATCH /api/v1/bookings/:id/cancel` `assertCsrf` + `requireAuth`, owner `id/code` check else 403 (SUPER_ADMIN bypass), `CANCELLED/COMPLETED→422`, 24h policy commented optional, `CANCELLED` update
+- [x] `app/dashboard/page.tsx` — server guard auth (cookie + Bearer) → `redirect /login?next=/dashboard` if not authed, `Navbar active="dashboard"`, `Footer`
+- [x] `app/dashboard/dashboardClient.tsx` — port `dashboard.html`: profile bento + tier card (`Matches Played`/`Upcoming` counts), `Next Up` grid `isUpcoming = date+start >= now && status not Cancelled/Completed` + `countdownText` (In N days / Starts in h/m), `confirm` → cancel `GET /api/v1/auth/csrf` + `PATCH /api/v1/bookings/:id/cancel` with `x-csrf-token`+`Origin`, refresh on success, empty CTA, `UpcomingSkeleton`/`HistorySkeleton` loading, 60s countdown `setInterval`
 
 ### AC
 

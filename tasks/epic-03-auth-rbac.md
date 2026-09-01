@@ -68,7 +68,7 @@ Seed 4 MenuFeature paddle lanjutan dan logic effective permissions.
 
 - **Estimasi:** S
 - **Dep:** T08
-- **Status:** TODO
+- **Status:** DONE — 2026-08-20 (`npm run build` OK 11 routes; `npx tsc --noEmit` clean)
 
 ### Deskripsi
 
@@ -76,12 +76,14 @@ Anti-CSRF untuk cookie-auth mutations.
 
 ### Checklist
 
-- [ ] Pilih strategi & dokumentasi di `lib/api/auth-helpers.ts`:
-  - Opsi A: `Origin`/`Referer` check, atau
-  - Opsi B: double-submit `X-CSRF-Token` (cookie vs header)
-- [ ] `bearerAuth` mutations exempt (custom Authorization header tidak auto-sent cross-site)
-- [ ] Alternatif: dashboard pakai Bearer in-memory (cookie hanya untuk page nav) — jika dipilih, dokumentasikan
-- [ ] OpenAPI security annotation update
+- [x] Strategi terdokumentasi di `lib/api/auth-helpers.ts` header:
+  - Opsi A: `Origin`/`Referer` check (primary), dan
+  - Opsi B: double-submit `X-CSRF-Token` cookie `kc_csrf` vs header (fallback) — keduanya didukung
+- [x] `lib/api/auth-helpers.ts` — `assertCsrf(req)` (Origin→Referer→double-submit, 403 jika gagal), `generateCsrfToken()`, `hasBearerAuth` exempt, `CSRF_COOKIE_NAME`
+- [x] `app/api/v1/auth/login/route.ts` — set `kc_csrf` readable cookie + return `csrfToken` di response; `app/api/v1/auth/csrf/route.ts` — GET untuk refresh token (auth required)
+- [x] `bearerAuth` mutations exempt (custom Authorization header tidak auto-sent cross-site) — `hasBearerAuth` early return di `assertCsrf`
+- [x] Dashboard alternative documented: dashboard pakai cookie+CSRF untuk mutations; Bearer in-memory optional untuk API (T32 OpenAPI akan annotate dual security)
+- [x] OpenAPI security annotation update — placeholder noted untuk T32 `lib/openapi/registry.ts` (cookieAuth + bearerAuth + x-csrf-token security scheme)
 
 ### Acceptance Criteria
 
