@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useLogout } from "@/hooks/useLogout";
+import { useAccess } from "@/hooks/useAccess";
 
 export type NavbarProps = {
   active?: "courts" | "dashboard" | "admin" | "";
@@ -35,6 +36,8 @@ export default function Navbar({ active = "", isAuthed = false, userName, onSign
   const [open, setOpen] = useState(false);
   const fallbackLogout = useLogout();
   const onSignOut = onSignOutProp ?? fallbackLogout;
+  const { data: access, loading: accessLoading } = useAccess();
+  const showAdmin = !accessLoading && !!access && (access.roles.includes("SUPER_ADMIN") || access.roles.includes("ADMIN"));
 
   return (
     <nav className="sticky top-0 z-40 glass border-b border-outline-variant/30">
@@ -49,7 +52,7 @@ export default function Navbar({ active = "", isAuthed = false, userName, onSign
         <div className="hidden md:flex items-center gap-8">
           <NavLink href="/courts" active={active === "courts"}>Find a Court</NavLink>
           <NavLink href="/dashboard" active={active === "dashboard"}>Dashboard</NavLink>
-          <NavLink href="/dashboard/admin" active={active === "admin"}>Admin</NavLink>
+          {showAdmin && <NavLink href="/dashboard/admin" active={active === "admin"}>Admin</NavLink>}
         </div>
 
         <div className="flex items-center gap-3">
@@ -97,7 +100,7 @@ export default function Navbar({ active = "", isAuthed = false, userName, onSign
         <div className="px-4 py-4 flex flex-col gap-3">
           <Link href="/courts" className="py-2">Find a Court</Link>
           <Link href="/dashboard" className="py-2">Dashboard</Link>
-          <Link href="/dashboard/admin" className="py-2">Admin</Link>
+          {showAdmin && <Link href="/dashboard/admin" className="py-2">Admin</Link>}
         </div>
       </div>
     </nav>

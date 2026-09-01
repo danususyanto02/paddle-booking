@@ -131,7 +131,7 @@ const COURTS: CourtSeed[] = [
     pricePerHour: 135000,
     rating: 4.6, reviews: 41,
     amenities: ["Cafe"],
-    image: U("photo-1551698618-1dfe5d97d256", 1200),
+    image: U("photo-1518611012118-696072aa579a", 1200),
     status: "AVAILABLE",
     badge: null,
     sortOrder: 80,

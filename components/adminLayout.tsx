@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useLogout } from "@/hooks/useLogout";
 
 export type AdminLayoutProps = {
-  active?: "dashboard" | "courts" | "members" | "bookings" | "reports" | "";
+  active?: "dashboard" | "courts" | "members" | "bookings" | "reports" | "users" | "";
   children: React.ReactNode;
   onSignOut?: () => void;
 };
@@ -21,7 +21,7 @@ function Item({
       href={href}
       className={
         "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold " +
-        (active ? "bg-mint-glace text-primary border-r-4 border-primary" : "text-on-surface-variant hover:bg-mint-glace")
+        (active ? "bg-mint-glace/60 text-primary border-r-4 border-primary/80" : "text-on-surface-variant hover:bg-mint-glace/60")
       }
     >
       <span className="material-symbols-outlined text-[20px]">{icon}</span> {label}
@@ -60,6 +60,7 @@ export default function AdminLayout({ active = "dashboard", children, onSignOut:
         </div>
         <nav className="flex-1 px-4 space-y-1">
           <Item href="/dashboard/admin" icon="dashboard" label="Dashboard" active={active === "dashboard"} />
+          <Item href="/dashboard/users" icon="manage_accounts" label="Users" active={active === "users"} />
           <Item href="/dashboard/admin/courts" icon="sports_tennis" label="Courts" active={active === "courts"} />
           <Item href="/dashboard/admin/members" icon="group" label="Members" active={active === "members"} />
           <Item href="/dashboard/admin/bookings" icon="calendar_month" label="Bookings" active={active === "bookings"} />
