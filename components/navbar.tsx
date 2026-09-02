@@ -32,12 +32,19 @@ function NavLink({
   );
 }
 
-export default function Navbar({ active = "", isAuthed = false, userName, onSignOut: onSignOutProp }: NavbarProps) {
+export default function Navbar({ active = "", isAuthed: isAuthedProp, userName: userNameProp, onSignOut: onSignOutProp }: NavbarProps) {
   const [open, setOpen] = useState(false);
   const fallbackLogout = useLogout();
   const onSignOut = onSignOutProp ?? fallbackLogout;
   const { data: access, loading: accessLoading } = useAccess();
   const showAdmin = !accessLoading && !!access && (access.roles.includes("SUPER_ADMIN") || access.roles.includes("ADMIN"));
+
+  // Derive auth from server prop if given, otherwise from client access fetch.
+  // isAuthedProp === undefined means public page — rely on useAccess.
+  const derivedAuthed = !accessLoading && !!access;
+  const isAuthed = isAuthedProp !== undefined ? isAuthedProp : derivedAuthed;
+  const userName = userNameProp ?? access?.user?.displayName ?? access?.user?.username ?? null;
+  const authUnknown = isAuthedProp === undefined && accessLoading;
 
   return (
     <nav className="sticky top-0 z-40 glass border-b border-outline-variant/30">
@@ -56,7 +63,9 @@ export default function Navbar({ active = "", isAuthed = false, userName, onSign
         </div>
 
         <div className="flex items-center gap-3">
-          {isAuthed ? (
+          {authUnknown ? (
+            <span className="hidden sm:inline w-20 h-9 rounded-full bg-surface-container animate-pulse" aria-hidden="true" />
+          ) : isAuthed ? (
             <>
               {userName ? (
                 <Link href="/dashboard" className="hidden sm:inline text-sm font-medium text-on-surface-variant hover:text-primary">

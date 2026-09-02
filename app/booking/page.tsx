@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUserId, resolveUserFromRequest } from "@/lib/auth/session";
 import { headers } from "next/headers";
 import BookingClient from "./bookingClient";
-import Navbar from "@/components/navbar";
+import NavbarServer from "@/components/navbarServer";
 import Footer from "@/components/footer";
 import { CourtDetailSkeleton } from "@/components/ui/skeleton";
 
@@ -42,7 +42,7 @@ export default async function BookingPage({ searchParams }: { searchParams?: Pro
   if (!court) {
     return (
       <>
-        <Navbar active="courts" />
+        <NavbarServer active="courts" />
         <div className="text-center py-16"><p className="text-on-surface-variant">No courts available.</p></div>
         <Footer />
       </>
@@ -51,7 +51,7 @@ export default async function BookingPage({ searchParams }: { searchParams?: Pro
 
   return (
     <>
-      <Navbar active="courts" />
+      <NavbarServer active="courts" />
       <main className="max-w-[1200px] mx-auto px-4 md:px-12 py-8">
         <Suspense fallback={<CourtDetailSkeleton />}>
           <BookingClient court={court} />

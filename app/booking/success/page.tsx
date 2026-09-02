@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Navbar from "@/components/navbar";
+import NavbarServer from "@/components/navbarServer";
 import Footer from "@/components/footer";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/auth/session";
@@ -13,7 +13,7 @@ export default async function BookingSuccessPage({ searchParams }: { searchParam
   if (!code) {
     return (
       <>
-        <Navbar />
+        <NavbarServer />
         <div className="max-w-[720px] mx-auto px-4 md:px-12 py-12 text-center"><p className="text-sm text-secondary">No booking found.</p><Link href="/courts" className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">Browse courts</Link></div>
         <Footer />
       </>
@@ -35,7 +35,7 @@ export default async function BookingSuccessPage({ searchParams }: { searchParam
   if (!authed) {
     return (
       <>
-        <Navbar />
+        <NavbarServer />
         <div className="max-w-[720px] mx-auto px-4 md:px-12 py-12 text-center">
           <p className="text-sm text-secondary">Please sign in to view your booking.</p>
           <Link href={`/login?next=${encodeURIComponent(`/booking/success?code=${code}`)}`} className="mt-4 inline-block px-6 py-3 rounded-full bg-primary text-on-primary text-sm font-semibold">Sign In</Link>
@@ -49,7 +49,7 @@ export default async function BookingSuccessPage({ searchParams }: { searchParam
   if (!booking) {
     return (
       <>
-        <Navbar />
+        <NavbarServer />
         <div className="max-w-[720px] mx-auto px-4 md:px-12 py-12 text-center"><p className="text-sm text-secondary">No booking found.</p><Link href="/courts" className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">Browse courts</Link></div>
         <Footer />
       </>
@@ -61,7 +61,7 @@ export default async function BookingSuccessPage({ searchParams }: { searchParam
 
   return (
     <>
-      <Navbar />
+      <NavbarServer />
       <main className="max-w-[720px] mx-auto px-4 md:px-12 py-12 text-center">
         <div className="w-16 h-16 rounded-full bg-mint-glace text-primary grid place-items-center mx-auto"><span className="material-symbols-outlined text-[32px]">check_circle</span></div>
         <h1 className="text-3xl font-bold mt-4">Booking Confirmed!</h1>

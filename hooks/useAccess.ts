@@ -9,8 +9,13 @@ type AccessData = {
   organizations: { id: string; name: string; code: string }[];
 } | null;
 
-let cache: AccessData | undefined; // undefined = not fetched yet
+let cache: AccessData | undefined;
 let inflight: Promise<AccessData> | null = null;
+const listeners = new Set<() => void>();
+
+function notify() {
+  for (const cb of listeners) cb();
+}
 
 async function fetchAccess(): Promise<AccessData> {
   try {
@@ -23,14 +28,31 @@ async function fetchAccess(): Promise<AccessData> {
   }
 }
 
+export function setAccessCache(data: AccessData) {
+  cache = data;
+  notify();
+}
+
 export function useAccess() {
   const [data, setData] = useState<AccessData | undefined>(cache);
   const [loading, setLoading] = useState(cache === undefined);
+
+  useEffect(() => {
+    const cb = () => {
+      setData(cache);
+      setLoading(cache === undefined);
+    };
+    listeners.add(cb);
+    return () => {
+      listeners.delete(cb);
+    };
+  }, []);
 
   const refresh = useCallback(async () => {
     if (inflight) {
       const d = await inflight;
       cache = d;
+      notify();
       setData(d);
       setLoading(false);
       return d;
@@ -40,6 +62,7 @@ export function useAccess() {
     const d = await inflight;
     inflight = null;
     cache = d;
+    notify();
     setData(d);
     setLoading(false);
     return d;
@@ -70,4 +93,5 @@ export function useAccess() {
 
 export function clearAccessCache() {
   cache = undefined;
+  notify();
 }

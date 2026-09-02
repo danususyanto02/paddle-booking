@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import Navbar from "@/components/navbar";
+import NavbarServer from "@/components/navbarServer";
 import Footer from "@/components/footer";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/auth/session";
@@ -33,7 +33,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams?: Pr
 
   return (
     <>
-      <Navbar />
+      <NavbarServer />
       <main className="max-w-[1000px] mx-auto px-4 md:px-12 py-8">
         <h1 className="text-2xl font-bold">Checkout</h1>
         <p className="text-sm text-on-surface-variant mt-1">Review your booking and choose a payment method (mock).</p>

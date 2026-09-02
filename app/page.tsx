@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import Navbar from "@/components/navbar";
+import NavbarServer from "@/components/navbarServer";
 import Footer from "@/components/footer";
 import { FeaturedSkeleton } from "@/components/ui/skeleton";
 import HeroSearch from "@/components/heroSearch";
@@ -9,7 +9,7 @@ import FeaturedGrid from "@/components/featuredGrid";
 export default function HomePage() {
   return (
     <>
-      <Navbar />
+      <NavbarServer />
       {/* Hero */}
       <section className="relative w-full min-h-[720px] flex flex-col items-center justify-center pt-16 pb-20 px-4 md:px-12 overflow-hidden">
         <div className="absolute inset-0 z-0">
