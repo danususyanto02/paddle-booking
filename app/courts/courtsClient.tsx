@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CourtCardSkeleton } from "@/components/ui/skeleton";
+import CourtImage from "@/components/courtImage";
 import { formatIDRShort } from "@/lib/pricing";
 
 type Court = {
@@ -48,8 +49,7 @@ function CourtCard({ court }: { court: Court }) {
   return (
     <article className="bg-surface-container-lowest rounded-xl overflow-hidden border border-surface-variant card-shadow hover:shadow-md hover:-translate-y-0.5 transition flex flex-col">
       <div className="relative h-48 overflow-hidden bg-surface-container">
-        {/* eslint-disable @next/next/no-img-element */}
-        <img src={court.image} alt={`${court.name} — ${court.type} ${court.surface}`} className="w-full h-full object-cover img-fade is-loaded" loading="lazy" width={600} height={400} />
+        <CourtImage src={court.image} alt={`${court.name} — ${court.type} ${court.surface}`} className="w-full h-full object-cover" loading="lazy" width={600} height={400} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
         {badge}
         <span className="absolute top-3 right-3 bg-inverse-surface/80 backdrop-blur text-surface text-xs px-3 py-1 rounded-full inline-flex items-center gap-1">

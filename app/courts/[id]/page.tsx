@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Navbar from "@/components/navbar";
+import NavbarServer from "@/components/navbarServer";
 import Footer from "@/components/footer";
 import { prisma } from "@/lib/prisma";
 import { formatIDRShort } from "@/lib/pricing";
+import CourtImage from "@/components/courtImage";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,21 +24,14 @@ export default async function CourtDetailPage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <Navbar active="courts" />
+      <NavbarServer active="courts" />
       <main className="max-w-[1200px] mx-auto px-4 md:px-12 py-8">
         <Link href="/courts" className="inline-flex items-center gap-1 text-sm font-medium text-on-surface-variant hover:text-primary">
           <span className="material-symbols-outlined text-[18px]">arrow_back</span> Back to Courts
         </Link>
 
         <div className="mt-6 grid lg:grid-cols-2 gap-8">
-          {/* eslint-disable @next/next/no-img-element */}
-          <img
-            src={court.image}
-            alt={court.name}
-            className="w-full h-[420px] object-cover rounded-xl border border-surface-variant"
-            width={800}
-            height={420}
-          />
+          <div className="w-full h-[420px] rounded-xl border border-surface-variant overflow-hidden bg-surface-container relative"><CourtImage src={court.image} alt={court.name} className="w-full h-full object-cover" width={800} height={420} /></div>
           <div>
             <span className="inline-flex items-center gap-1 bg-mint-glace text-on-primary-fixed-variant text-xs font-semibold px-3 py-1 rounded-full">
               {court.type} · {court.surface}

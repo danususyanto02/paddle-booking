@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CourtImage from "./courtImage";
 import { prisma } from "@/lib/prisma";
 
 export default async function FeaturedGrid() {
@@ -34,15 +35,7 @@ export default async function FeaturedGrid() {
         href={`/courts/${hero.code}`}
         className="md:col-span-8 group rounded-2xl overflow-hidden relative min-h-[380px] border border-outline-variant/30 shadow-sm bg-surface-container"
       >
-        {/* eslint-disable @next/next/no-img-element */}
-        <img
-          src={hero.image}
-          alt={hero.name}
-          width={800}
-          height={500}
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition duration-700 img-fade is-loaded"
-          loading="lazy"
-        />
+        <div className="absolute inset-0 overflow-hidden"><CourtImage src={hero.image} alt={hero.name} width={800} height={500} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition duration-700" /></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         <div className="relative h-full flex flex-col justify-between p-6 md:p-8 min-h-[380px]">
           <div className="flex justify-between">
@@ -73,15 +66,7 @@ export default async function FeaturedGrid() {
             href={`/courts/${c.code}`}
             className="group relative rounded-2xl overflow-hidden min-h-[180px] border border-outline-variant/30 shadow-sm flex-1 bg-surface-container"
           >
-            {/* eslint-disable @next/next/no-img-element */}
-            <img
-              src={c.image}
-              alt={c.name}
-              width={600}
-              height={400}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition duration-700 img-fade is-loaded"
-              loading="lazy"
-            />
+            <div className="absolute inset-0 overflow-hidden"><CourtImage src={c.image} alt={c.name} width={600} height={400} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition duration-700" /></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             <span className="absolute top-3 left-3 bg-surface/90 backdrop-blur text-on-surface text-xs px-2 py-1 rounded-full">{c.type}</span>
             <div className="absolute bottom-0 p-4">

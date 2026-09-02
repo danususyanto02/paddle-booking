@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/components/ui/toaster";
+import { setAccessCache } from "@/hooks/useAccess";
 
 export default function LoginInner() {
   const router = useRouter();
@@ -26,10 +27,19 @@ export default function LoginInner() {
     setLoading(true);
     try {
       const res = await fetch("/api/v1/auth/login", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
-      const j = await res.json().catch(() => ({})) as { error?: { message?: string } };
+      const j = await res.json().catch(() => ({})) as { error?: { message?: string }; data?: unknown };
       if (!res.ok) { setErr(j.error?.message ?? "Invalid credentials"); return; }
+      // Immediately hydrate access cache so Navbar flips to authed without full reload
+      try {
+        const me = await fetch("/api/v1/me/access", { credentials: "include" });
+        if (me.ok) {
+          const mj = await me.json() as { data: { user: { id: string; username: string; displayName: string | null }; roles: string[]; effectivePermissions: string[]; organizations: { id: string; name: string; code: string }[] } | null };
+          if (mj.data) setAccessCache(mj.data);
+        }
+      } catch {}
       toast(`Welcome, ${username}!`, "success");
       router.push(next || "/dashboard");
+      router.refresh();
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : "Login failed");
     } finally { setLoading(false); }
