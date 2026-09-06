@@ -3,6 +3,7 @@ import { success, error, validationError } from "@/lib/api/envelope";
 import { updateCourtSchema } from "@/lib/validations/court";
 import { requireFeaturePermission } from "@/lib/rbac/guards";
 import { assertCsrf } from "@/lib/api/auth-helpers";
+import { audit } from "@/lib/api/audit";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -49,6 +50,7 @@ export async function PATCH(req: Request, { params }: Params) {
     data: parsed.data as never,
   });
 
+  await audit(req, { action: "UPDATE", resourceType: "COURT", resourceId: id, permissionCode: "ED0000008", before: existing, after: updated });
   return success(updated);
 }
 

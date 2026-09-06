@@ -3,6 +3,7 @@ import { success, error, validationError } from "@/lib/api/envelope";
 import { bulkDeleteSchema } from "@/lib/validations/court";
 import { requireFeaturePermission } from "@/lib/rbac/guards";
 import { assertCsrf } from "@/lib/api/auth-helpers";
+import { audit } from "@/lib/api/audit";
 
 // POST /api/v1/courts/delete — bulk soft-delete — DD0000008
 // Body: { ids: string[] } max 2000, deduped, partial success 200
@@ -88,7 +89,8 @@ export async function POST(req: Request) {
     }
   }
 
-  // Audit: one row per bulk request will be added in T31 writeAuditLog; for now no-op
+  // Audit: one row per bulk request with per-id outcomes (spec T31)
+  await audit(req, { action: "DELETE", resourceType: "COURT", permissionCode: "DD0000008", after: { ids, results } });
 
   return success(results);
 }

@@ -3,6 +3,7 @@ import { success, error, validationError } from "@/lib/api/envelope";
 import { createCourtSchema, listQuerySchema } from "@/lib/validations/court";
 import { requireFeaturePermission } from "@/lib/rbac/guards";
 import { assertCsrf } from "@/lib/api/auth-helpers";
+import { audit } from "@/lib/api/audit";
 
 // GET /api/v1/courts — public read (but if inactive feature, 404)
 // No auth required for public listing; admin filtering via same endpoint (auth optional)
@@ -71,6 +72,6 @@ export async function POST(req: Request) {
 
   const court = await prisma.court.create({ data: parsed.data as never });
 
-  // Audit: best-effort after commit (T31); for now no-op (will add writeAuditLog later)
+  await audit(req, { action: "CREATE", resourceType: "COURT", resourceId: court.id, permissionCode: "AD0000008", after: court });
   return success(court, { status: 201 });
 }

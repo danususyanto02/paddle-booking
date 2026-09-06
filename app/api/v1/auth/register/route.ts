@@ -2,9 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { getEnv } from "@/lib/env";
 import { registerBodySchema } from "@/lib/auth/validation";
 import { hashPassword } from "@/lib/auth/password";
+import { assertRateLimit } from "@/lib/api/rate-limit-guard";
 import { error, success, validationError } from "@/lib/api/envelope";
 
 export async function POST(req: Request) {
+  const limited = await assertRateLimit(req, "register");
+  if (limited) return limited;
   let body: unknown;
   try { body = await req.json(); } catch { return error("BAD_REQUEST", "Invalid JSON", { status: 400 }); }
 

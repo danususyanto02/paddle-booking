@@ -4,6 +4,7 @@ import { verifyPassword } from "@/lib/auth/password";
 import { signAccessToken, generateRefreshToken, refreshExpiresAt } from "@/lib/auth/jwt";
 import { signSession, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/lib/auth/session";
 import { CSRF_COOKIE_NAME, generateCsrfToken } from "@/lib/api/auth-helpers";
+import { assertRateLimit } from "@/lib/api/rate-limit-guard";
 import { error, success } from "@/lib/api/envelope";
 import * as argon2 from "argon2";
 import { cookies } from "next/headers";
@@ -11,6 +12,8 @@ import { cookies } from "next/headers";
 const GENERIC = "Invalid credentials";
 
 export async function POST(req: Request) {
+  const limited = await assertRateLimit(req, "login");
+  if (limited) return limited;
   let body: unknown;
   try { body = await req.json(); } catch { return error("BAD_REQUEST", "Invalid JSON", { status: 400 }); }
   const parsed = loginBodySchema.safeParse(body);
