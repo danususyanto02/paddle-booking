@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/rbac/guards";
 import { assertCsrf } from "@/lib/api/auth-helpers";
 import { z } from "zod";
 import { hashLockToken, generateLockToken } from "@/lib/locks/token";
+import { audit } from "@/lib/api/audit";
 
 const bodySchema = z.object({ resourceType: z.enum(["COURT", "BOOKING", "USER", "ROLE", "ORGANIZATION", "FEATURE"]), resourceId: z.string().min(1) });
 
@@ -42,5 +43,6 @@ export async function POST(req: Request) {
     create: { resourceType: resourceType as never, resourceId, lockTokenHash, ownerUserId: auth.userId, acquiredAt: now, heartbeatAt: now, expiresAt },
   });
 
+  await audit(req, { action: "LOCK_ACQUIRE", resourceType: resourceType as "COURT" | "BOOKING" | "USER" | "ROLE" | "ORGANIZATION" | "FEATURE", resourceId, after: { id: lock.id, expiresAt } });
   return success({ id: lock.id, resourceType, resourceId, expiresAt, lockToken: token });
 }

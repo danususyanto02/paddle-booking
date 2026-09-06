@@ -5,6 +5,7 @@ import { calcTotal, PROCESSING_FEE } from "@/lib/pricing";
 import { endTime, canFit, toMinutes } from "@/lib/slots";
 import { requireAuth } from "@/lib/rbac/guards";
 import { assertCsrf } from "@/lib/api/auth-helpers";
+import { audit } from "@/lib/api/audit";
 import { z } from "zod";
 
 function bookingCode(): string {
@@ -133,6 +134,7 @@ export async function POST(req: Request) {
       });
     });
 
+    await audit(req, { action: "CREATE", resourceType: "BOOKING", resourceId: booking.id, after: booking });
     return success(booking, { status: 201 });
   } catch (e: unknown) {
     const err = e as { code?: string; message?: string };

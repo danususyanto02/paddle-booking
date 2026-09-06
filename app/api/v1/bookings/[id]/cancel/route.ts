@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { success, error } from "@/lib/api/envelope";
 import { requireAuth } from "@/lib/rbac/guards";
 import { assertCsrf } from "@/lib/api/auth-helpers";
+import { audit } from "@/lib/api/audit";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const csrf = assertCsrf(req);
@@ -34,5 +35,6 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     include: { court: true },
   });
 
+  await audit(req, { action: "UPDATE", resourceType: "BOOKING", resourceId: booking.id, before: booking, after: updated });
   return success(updated);
 }

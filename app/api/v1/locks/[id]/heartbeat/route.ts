@@ -3,6 +3,7 @@ import { success, error } from "@/lib/api/envelope";
 import { requireAuth } from "@/lib/rbac/guards";
 import { assertCsrf } from "@/lib/api/auth-helpers";
 import { verifyLockToken } from "@/lib/locks/token";
+import { audit } from "@/lib/api/audit";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const csrf = assertCsrf(req);
@@ -19,5 +20,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!ok) return error("LOCKED", "Invalid lock token", { status: 423 });
   const expiresAt = new Date(Date.now() + 2 * 60 * 1000);
   await prisma.recordLock.update({ where: { id }, data: { heartbeatAt: new Date(), expiresAt } });
+  await audit(req, { action: "LOCK_HEARTBEAT", resourceType: "LOCK", resourceId: id, after: { expiresAt } });
   return success({ id, expiresAt });
 }

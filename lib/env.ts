@@ -82,7 +82,7 @@ const envSchema = z
     RATE_LIMIT_LOGIN_WINDOW_SECONDS: z
       .string()
       .optional()
-      .default("900")
+      .default("180")
       .transform((v) => Number(v))
       .pipe(z.number().int().min(1)),
 

@@ -3,6 +3,7 @@ import { success, error } from "@/lib/api/envelope";
 import { requireAuth } from "@/lib/rbac/guards";
 import { assertCsrf } from "@/lib/api/auth-helpers";
 import { verifyLockToken } from "@/lib/locks/token";
+import { audit } from "@/lib/api/audit";
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const csrf = assertCsrf(req);
@@ -20,5 +21,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     if (!ok) return error("LOCKED", "Invalid lock token", { status: 423 });
   }
   await prisma.recordLock.delete({ where: { id } });
+  await audit(req, { action: "LOCK_RELEASE", resourceType: "LOCK", resourceId: id, before: lock });
   return success(null);
 }
